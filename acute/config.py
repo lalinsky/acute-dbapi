@@ -1,15 +1,16 @@
-db_name = "kskuhlman"  #"dbapi20"
+db_name = "dbapi20"
+# Prefix to be used for tables
+table_prefix = 'apitest_'
 
-connect_kw_args = {
+connect_args = {
    'db2' : {
 	'dsn': db_name, 
-	'uid': 'kskuhlman',
-        'user': 'kskuhlman',
-	'pwd': 'kskuhlman',
+	'uid': 'username',
+	'pwd': 'password',
    },
    'psycopg2' : {
        'dsn':
-         'host=localhost dbname=%s user=kskuhlman password=kskuhlman' % db_name
+         'host=localhost dbname=%s user=username  password=password ' % db_name
    }
 }
 

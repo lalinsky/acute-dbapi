@@ -5,13 +5,25 @@
 __rcs_id__  = '$Id$'
 __version__ = '$Revision$'[11:-2]
 __author__ = 'Ken Kuhlman <acute@redlagoon.net>'
+# $Log: dbapi20.py,v $
 
 import unittest
 import time
 import popen2
+import config
 
-# $Log: dbapi20.py,v $
+db_driver = "psycopg2"
+driver_module = __import__(db_driver)
+
+table_prefix = config.table_prefix
+
 class SupportedFeatures(object): 
+    def __init__(self, db_driver): 
+       """ This is just a placeholder for the day when we've identified the
+           differences between the major drivers.  At that point, it should 
+           set attributes according to the driver's capabilities.
+       """ 
+       pass
     transactional_ddl = False
     lower_func = 'lower'
 
@@ -20,7 +32,7 @@ class DBAPITest(unittest.TestCase):
         The 'Optional Extensions' are not yet being tested.
 
         self.drivers should subclass this test, overriding setUp, tearDown,
-        self.driver, connect_args and connect_kw_args. Class specification
+        self.driver, and connect_args. Class specification
         should be as follows:
 
         import dbapi20 
@@ -29,10 +41,12 @@ class DBAPITest(unittest.TestCase):
     '''
 
     # The driver module defines the 'connect' method 
-    driver = None
-    connect_args = () # List of arguments to pass to connect
-    connect_kw_args = {} # Keyword arguments for connect
-    table_prefix = 'apitest_' # If you need to specify a prefix for tables
+    driver = driver_module
+
+    # Keyword arguments for connect
+    connect_args = config.connect_args[db_driver]
+    create_db_cmd = config.create_db_cmds[db_driver]
+    driver_supports = SupportedFeatures(db_driver)
 
     ddl1 = 'create table %sbooze (name varchar(20))' % table_prefix
     ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
@@ -85,9 +99,7 @@ class DBAPITest(unittest.TestCase):
 
     def _connect(self):
         try:
-            con = self.driver.connect(
-                *self.connect_args,**self.connect_kw_args
-                )
+            con = self.driver.connect(**self.connect_args)
         except AttributeError:
             self.fail("No connect method found in self.driver module")
         self._connection = con
@@ -212,9 +224,9 @@ class DBAPITest(unittest.TestCase):
             cur2 = con.cursor()
             self.executeDDL1(cur1)
             cur1.execute("insert into %sbooze values ('Victoria Bitter')" % (
-                self.table_prefix
+                table_prefix
                 ))
-            cur2.execute("select name from %sbooze" % self.table_prefix)
+            cur2.execute("select name from %sbooze" % table_prefix)
             booze = cur2.fetchall()
             self.assertEqual(len(booze),1)
             self.assertEqual(len(booze[0]),1)
@@ -231,7 +243,7 @@ class DBAPITest(unittest.TestCase):
                 "cursor.description should be none after executing a "
                 "statement that can't return rows (such as DDL)"
                 )
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             self.assertEqual(len(cur.description),1,
                 'cursor.description describes too many columns'
                 )
@@ -264,13 +276,13 @@ class DBAPITest(unittest.TestCase):
                 'statements'
                 )
             cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
-                self.table_prefix
+                table_prefix
                 ))
             self.failUnless(cur.rowcount in (-1,1),
                 'cursor.rowcount should == number or rows inserted, or '
                 'set to -1 after executing an insert statement'
                 )
-            cur.execute("select name from %sbooze" % self.table_prefix)
+            cur.execute("select name from %sbooze" % table_prefix)
             self.failUnless(cur.rowcount in (-1,1),
                 'cursor.rowcount should == number of rows returned, or '
                 'set to -1 after executing a select statement'
@@ -328,40 +340,40 @@ class DBAPITest(unittest.TestCase):
     def _paraminsert(self,cur):
         self.executeDDL1(cur)
         cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
-            self.table_prefix
+            table_prefix
             ))
         self.failUnless(cur.rowcount in (-1,1))
 
         if self.driver.paramstyle == 'qmark':
             cur.execute(
-                'insert into %sbooze values (?)' % self.table_prefix,
+                'insert into %sbooze values (?)' % table_prefix,
                 ("Cooper's",)
                 )
         elif self.driver.paramstyle == 'numeric':
             cur.execute(
-                'insert into %sbooze values (:1)' % self.table_prefix,
+                'insert into %sbooze values (:1)' % table_prefix,
                 ("Cooper's",)
                 )
         elif self.driver.paramstyle == 'named':
             cur.execute(
-                'insert into %sbooze values (:beer)' % self.table_prefix, 
+                'insert into %sbooze values (:beer)' % table_prefix, 
                 {'beer':"Cooper's"}
                 )
         elif self.driver.paramstyle == 'format':
             cur.execute(
-                'insert into %sbooze values (%%s)' % self.table_prefix,
+                'insert into %sbooze values (%%s)' % table_prefix,
                 ("Cooper's",)
                 )
         elif self.driver.paramstyle == 'pyformat':
             cur.execute(
-                'insert into %sbooze values (%%(beer)s)' % self.table_prefix,
+                'insert into %sbooze values (%%(beer)s)' % table_prefix,
                 {'beer':"Cooper's"}
                 )
         else:
             self.fail('Invalid paramstyle')
         self.failUnless(cur.rowcount in (-1,1))
 
-        cur.execute('select name from %sbooze' % self.table_prefix)
+        cur.execute('select name from %sbooze' % table_prefix)
         res = cur.fetchall()
         self.assertEqual(len(res),2,'cursor.fetchall returned too few rows')
         beers = [res[0][0],res[1][0]]
@@ -380,28 +392,28 @@ class DBAPITest(unittest.TestCase):
             margs = [ {'beer': "Cooper's"}, {'beer': "Boag's"} ]
             if self.driver.paramstyle == 'qmark':
                 cur.executemany(
-                    'insert into %sbooze values (?)' % self.table_prefix,
+                    'insert into %sbooze values (?)' % table_prefix,
                     largs
                     )
             elif self.driver.paramstyle == 'numeric':
                 cur.executemany(
-                    'insert into %sbooze values (:1)' % self.table_prefix,
+                    'insert into %sbooze values (:1)' % table_prefix,
                     largs
                     )
             elif self.driver.paramstyle == 'named':
                 cur.executemany(
-                    'insert into %sbooze values (:beer)' % self.table_prefix,
+                    'insert into %sbooze values (:beer)' % table_prefix,
                     margs
                     )
             elif self.driver.paramstyle == 'format':
                 cur.executemany(
-                    'insert into %sbooze values (%%s)' % self.table_prefix,
+                    'insert into %sbooze values (%%s)' % table_prefix,
                     largs
                     )
             elif self.driver.paramstyle == 'pyformat':
                 cur.executemany(
                     'insert into %sbooze values (%%(beer)s)' % (
-                        self.table_prefix
+                        table_prefix
                         ),
                     margs
                     )
@@ -411,7 +423,7 @@ class DBAPITest(unittest.TestCase):
                 'insert using cursor.executemany set cursor.rowcount to '
                 'incorrect value %r' % cur.rowcount
                 )
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             res = cur.fetchall()
             self.assertEqual(len(res),2,
                 'cursor.fetchall retrieved incorrect number of rows'
@@ -437,7 +449,7 @@ class DBAPITest(unittest.TestCase):
             self.executeDDL1(cur)
             self.assertRaises(self.driver.Error,cur.fetchone)
 
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             self.assertEqual(cur.fetchone(),None,
                 'cursor.fetchone should return None if a query retrieves '
                 'no rows'
@@ -447,11 +459,11 @@ class DBAPITest(unittest.TestCase):
             # cursor.fetchone should raise an Error if called after
             # executing a query that cannnot return rows
             cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
-                self.table_prefix
+                table_prefix
                 ))
             self.assertRaises(self.driver.Error,cur.fetchone)
 
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             r = cur.fetchone()
             self.assertEqual(len(r),1,
                 'cursor.fetchone should have retrieved a single row'
@@ -480,7 +492,7 @@ class DBAPITest(unittest.TestCase):
             tests.
         '''
         populate = [
-            "insert into %sbooze values ('%s')" % (self.table_prefix,s) 
+            "insert into %sbooze values ('%s')" % (table_prefix,s) 
                 for s in self.samples
             ]
         return populate
@@ -498,7 +510,7 @@ class DBAPITest(unittest.TestCase):
             for sql in self._populate():
                 cur.execute(sql)
 
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             r = cur.fetchmany()
             self.assertEqual(len(r),1,
                 'cursor.fetchmany retrieved incorrect number of rows, '
@@ -522,7 +534,7 @@ class DBAPITest(unittest.TestCase):
 
             # Same as above, using cursor.arraysize
             cur.arraysize=4
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             r = cur.fetchmany() # Should get 4 rows
             self.assertEqual(len(r),4,
                 'cursor.arraysize not being honoured by fetchmany'
@@ -534,7 +546,7 @@ class DBAPITest(unittest.TestCase):
             self.failUnless(cur.rowcount in (-1,6))
 
             cur.arraysize=6
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             rows = cur.fetchmany() # Should get all rows
             self.failUnless(cur.rowcount in (-1,6))
             self.assertEqual(len(rows),6)
@@ -556,7 +568,7 @@ class DBAPITest(unittest.TestCase):
             self.failUnless(cur.rowcount in (-1,6))
 
             self.executeDDL2(cur)
-            cur.execute('select name from %sbarflys' % self.table_prefix)
+            cur.execute('select name from %sbarflys' % table_prefix)
             r = cur.fetchmany() # Should get empty sequence
             self.assertEqual(len(r),0,
                 'cursor.fetchmany should return an empty sequence if '
@@ -584,7 +596,7 @@ class DBAPITest(unittest.TestCase):
             # after executing a a statement that cannot return rows
             self.assertRaises(self.driver.Error,cur.fetchall)
 
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             rows = cur.fetchall()
             self.failUnless(cur.rowcount in (-1,len(self.samples)))
             self.assertEqual(len(rows),len(self.samples),
@@ -605,7 +617,7 @@ class DBAPITest(unittest.TestCase):
             self.failUnless(cur.rowcount in (-1,len(self.samples)))
 
             self.executeDDL2(cur)
-            cur.execute('select name from %sbarflys' % self.table_prefix)
+            cur.execute('select name from %sbarflys' % table_prefix)
             rows = cur.fetchall()
             self.failUnless(cur.rowcount in (-1,0))
             self.assertEqual(len(rows),0,
@@ -624,7 +636,7 @@ class DBAPITest(unittest.TestCase):
             for sql in self._populate():
                 cur.execute(sql)
 
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             rows1  = cur.fetchone()
             rows23 = cur.fetchmany(2)
             rows4  = cur.fetchone()
@@ -699,7 +711,8 @@ class DBAPITest(unittest.TestCase):
             con.close()
 
     def test_nextset(self):
-        raise NotImplementedError,'Drivers need to override this test'
+    #    raise NotImplementedError,'Drivers need to override this test'
+         pass 
 
     def test_arraysize(self):
         # Not much here - rest of the tests for this are in test_fetchmany
@@ -732,17 +745,17 @@ class DBAPITest(unittest.TestCase):
         finally:
             con.close()
 
-    def test_setoutputsize(self):
-        # Real test for setoutputsize is driver dependant
-        raise NotImplementedError,'Driver need to override this test'
+    #def test_setoutputsize(self):
+    #    # Real test for setoutputsize is driver dependant
+    #    raise NotImplementedError,'Driver need to override this test'
 
     def test_None(self):
         con = self._connect()
         try:
             cur = con.cursor()
             self.executeDDL1(cur)
-            cur.execute('insert into %sbooze values (NULL)' % self.table_prefix)
-            cur.execute('select name from %sbooze' % self.table_prefix)
+            cur.execute('insert into %sbooze values (NULL)' % table_prefix)
+            cur.execute('select name from %sbooze' % table_prefix)
             r = cur.fetchall()
             self.assertEqual(len(r),1)
             self.assertEqual(len(r[0]),1)
@@ -799,3 +812,5 @@ class DBAPITest(unittest.TestCase):
             'module.ROWID must be defined.'
             )
 
+if __name__ == '__main__':
+    unittest.main()
