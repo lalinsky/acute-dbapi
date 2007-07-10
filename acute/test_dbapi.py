@@ -1,74 +1,22 @@
 #!/usr/bin/env python
 ''' Python DB API 2.0 driver compliance unit test suite. 
-    
-    This software is Public Domain and may be used without restrictions.
-
- "Now we have booze and barflies entering the discussion, plus rumours of
-  DBAs on drugs... and I won't tell you what flashes through my mind each
-  time I read the subject line with 'Anal Compliance' in it.  All around
-  this is turning out to be a thoroughly unwholesome unit test."
-
-    -- Ian Bicking
 '''
 
 __rcs_id__  = '$Id$'
 __version__ = '$Revision$'[11:-2]
-__author__ = 'Stuart Bishop <zen@shangri-la.dropbear.id.au>'
+__author__ = 'Ken Kuhlman <acute@redlagoon.net>'
 
 import unittest
 import time
+import popen2
 
 # $Log: dbapi20.py,v $
-# Revision 1.10  2003/10/09 03:14:14  zenzen
-# Add test for DB API 2.0 optional extension, where database exceptions
-# are exposed as attributes on the Connection object.
-#
-# Revision 1.9  2003/08/13 01:16:36  zenzen
-# Minor tweak from Stefan Fleiter
-#
-# Revision 1.8  2003/04/10 00:13:25  zenzen
-# Changes, as per suggestions by M.-A. Lemburg
-# - Add a table prefix, to ensure namespace collisions can always be avoided
-#
-# Revision 1.7  2003/02/26 23:33:37  zenzen
-# Break out DDL into helper functions, as per request by David Rushby
-#
-# Revision 1.6  2003/02/21 03:04:33  zenzen
-# Stuff from Henrik Ekelund:
-#     added test_None
-#     added test_nextset & hooks
-#
-# Revision 1.5  2003/02/17 22:08:43  zenzen
-# Implement suggestions and code from Henrik Eklund - test that cursor.arraysize
-# defaults to 1 & generic cursor.callproc test added
-#
-# Revision 1.4  2003/02/15 00:16:33  zenzen
-# Changes, as per suggestions and bug reports by M.-A. Lemburg,
-# Matthew T. Kromer, Federico Di Gregorio and Daniel Dittmar
-# - Class renamed
-# - Now a subclass of TestCase, to avoid requiring the driver stub
-#   to use multiple inheritance
-# - Reversed the polarity of buggy test in test_description
-# - Test exception heirarchy correctly
-# - self.populate is now self._populate(), so if a driver stub
-#   overrides self.ddl1 this change propogates
-# - VARCHAR columns now have a width, which will hopefully make the
-#   DDL even more portible (this will be reversed if it causes more problems)
-# - cursor.rowcount being checked after various execute and fetchXXX methods
-# - Check for fetchall and fetchmany returning empty lists after results
-#   are exhausted (already checking for empty lists if select retrieved
-#   nothing
-# - Fix bugs in test_setoutputsize_basic and test_setinputsizes
-#
+class SupportedFeatures(object): 
+    transactional_ddl = False
+    lower_func = 'lower'
 
 class DatabaseAPI20Test(unittest.TestCase):
-    ''' Test a database self.driver for DB API 2.0 compatibility.
-        This implementation tests Gadfly, but the TestCase
-        is structured so that other self.drivers can subclass this 
-        test case to ensure compiliance with the DB-API. It is 
-        expected that this TestCase may be expanded in the future
-        if ambiguities or edge conditions are discovered.
-
+    ''' Test a driver for DB-API compatibility.
         The 'Optional Extensions' are not yet being tested.
 
         self.drivers should subclass this test, overriding setUp, tearDown,
@@ -78,43 +26,48 @@ class DatabaseAPI20Test(unittest.TestCase):
         import dbapi20 
         class mytest(dbapi20.DatabaseAPI20Test):
            [...] 
-
-        Don't 'import DatabaseAPI20Test from dbapi20', or you will
-        confuse the unit tester - just 'import dbapi20'.
     '''
 
-    # The self.driver module. This should be the module where the 'connect'
-    # method is to be found
+    # The driver module defines the 'connect' method 
     driver = None
     connect_args = () # List of arguments to pass to connect
     connect_kw_args = {} # Keyword arguments for connect
-    table_prefix = 'dbapi20test_' # If you need to specify a prefix for tables
+    table_prefix = 'apitest_' # If you need to specify a prefix for tables
 
     ddl1 = 'create table %sbooze (name varchar(20))' % table_prefix
     ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
     xddl1 = 'drop table %sbooze' % table_prefix
     xddl2 = 'drop table %sbarflys' % table_prefix
 
-    lowerfunc = 'lower' # Name of stored procedure to convert string->lowercase
+    lower_func = 'lower' # Name of stored procedure to convert string->lowercase
         
-    # Some drivers may need to override these helpers, for example adding
-    # a 'commit' after the execute.
     def executeDDL1(self,cursor):
         cursor.execute(self.ddl1)
+        if self.driver_supports.transactional_ddl: 
+           self._connection.commit()
 
     def executeDDL2(self,cursor):
         cursor.execute(self.ddl2)
+        if self.driver_supports.transactional_ddl:
+           self._connection.commit()
 
     def setUp(self):
-        ''' self.drivers should override this method to perform required setup
-            if any is necessary, such as creating the database.
-        '''
-        pass
+        """ Override this method if additional setup is needed """
+        try:
+            con = self._connect()
+            con.close()
+        except 'abcdef':
+            if self.create_db_cmd:
+                cout,cin = popen2.popen2(self.create_db_cmd)
+                cin.close()
+                cout.read()
+            else: 
+                raise Exception("Can't connect to database and no "
+                      "create command given")
 
     def tearDown(self):
-        ''' self.drivers should override this method to perform required cleanup
-            if any is necessary, such as deleting the test database.
-            The default drops the tables that may be created.
+        ''' Override this method if cleanup beyond dropping the tables
+            is needed. (Such as dropping the db)
         '''
         con = self._connect()
         try:
@@ -132,11 +85,13 @@ class DatabaseAPI20Test(unittest.TestCase):
 
     def _connect(self):
         try:
-            return self.driver.connect(
+            con = self.driver.connect(
                 *self.connect_args,**self.connect_kw_args
                 )
         except AttributeError:
             self.fail("No connect method found in self.driver module")
+        self._connection = con
+        return con
 
     def test_connect(self):
         con = self._connect()
@@ -198,13 +153,11 @@ class DatabaseAPI20Test(unittest.TestCase):
             issubclass(self.driver.NotSupportedError,self.driver.Error)
             )
 
+    #@testbase.requires('connection_level_exceptions')
     def test_ExceptionsAsConnectionAttributes(self):
-        # OPTIONAL EXTENSION
-        # Test for the optional DB API 2.0 extension, where the exceptions
-        # are exposed as attributes on the Connection object
-        # I figure this optional extension will be implemented by any
-        # driver author who is using this test suite, so it is enabled
-        # by default.
+        """ Test the optional extension of exposing exceptions on the
+        connection object.
+        """ 
         con = self._connect()
         drv = self.driver
         self.failUnless(con.Warning is drv.Warning)
@@ -219,17 +172,21 @@ class DatabaseAPI20Test(unittest.TestCase):
 
 
     def test_commit(self):
+        """ Commit must be defined, even if it doesn't do anything """
         con = self._connect()
         try:
-            # Commit must work, even if it doesn't do anything
             con.commit()
         finally:
             con.close()
 
+    ###@testbase.requires('rollback_defined')
     def test_rollback(self):
+        """ Rollback should either work or throw NotSupportedError.  
+        The spec allows drivers that don't support rollback to also 
+        simply not define this method, which is silly.  2 ways to do the same
+        trivial thing!
+        """
         con = self._connect()
-        # If rollback is defined, it should either work or throw
-        # the documented exception
         if hasattr(con,'rollback'):
             try:
                 con.rollback()
@@ -237,6 +194,8 @@ class DatabaseAPI20Test(unittest.TestCase):
                 pass
     
     def test_cursor(self):
+        """ Connections must have cursor methods
+        """
         con = self._connect()
         try:
             cur = con.cursor()
@@ -244,10 +203,11 @@ class DatabaseAPI20Test(unittest.TestCase):
             con.close()
 
     def test_cursor_isolation(self):
+        """ Test isolation levels by making sure two cursors from the same
+        connection are able to read eachother's data without commiting.
+        """
         con = self._connect()
         try:
-            # Make sure cursors created from the same connection have
-            # the documented transaction isolation level
             cur1 = con.cursor()
             cur2 = con.cursor()
             self.executeDDL1(cur1)
@@ -268,8 +228,8 @@ class DatabaseAPI20Test(unittest.TestCase):
             cur = con.cursor()
             self.executeDDL1(cur)
             self.assertEqual(cur.description,None,
-                'cursor.description should be none after executing a '
-                'statement that can return no rows (such as DDL)'
+                "cursor.description should be none after executing a "
+                "statement that can't return rows (such as DDL)"
                 )
             cur.execute('select name from %sbooze' % self.table_prefix)
             self.assertEqual(len(cur.description),1,
@@ -286,7 +246,6 @@ class DatabaseAPI20Test(unittest.TestCase):
                     % cur.description[0][1]
                 )
 
-            # Make sure self.description gets reset
             self.executeDDL2(cur)
             self.assertEqual(cur.description,None,
                 'cursor.description not being set to None when executing '
@@ -324,7 +283,7 @@ class DatabaseAPI20Test(unittest.TestCase):
         finally:
             con.close()
 
-    lower_func = 'lower'
+    #@require('callproc', 'lower_func')
     def test_callproc(self):
         con = self._connect()
         try:
@@ -345,21 +304,17 @@ class DatabaseAPI20Test(unittest.TestCase):
             con.close()
 
     def test_close(self):
+        """ cursor.execute, cursor.commit, and cursor.close should raise 
+        an Error if called on closed connection
+        """
         con = self._connect()
         try:
             cur = con.cursor()
         finally:
             con.close()
 
-        # cursor.execute should raise an Error if called after connection
-        # closed
         self.assertRaises(self.driver.Error,self.executeDDL1,cur)
-
-        # connection.commit should raise an Error if called after connection'
-        # closed.'
         self.assertRaises(self.driver.Error,con.commit)
-
-        # connection.close should raise an Error if called more than once
         self.assertRaises(self.driver.Error,con.close)
 
     def test_execute(self):
@@ -412,13 +367,9 @@ class DatabaseAPI20Test(unittest.TestCase):
         beers = [res[0][0],res[1][0]]
         beers.sort()
         self.assertEqual(beers[0],"Cooper's",
-            'cursor.fetchall retrieved incorrect data, or data inserted '
-            'incorrectly'
-            )
+            'cursor.fetchall retrieved incorrect data')
         self.assertEqual(beers[1],"Victoria Bitter",
-            'cursor.fetchall retrieved incorrect data, or data inserted '
-            'incorrectly'
-            )
+            'cursor.fetchall retrieved incorrect data')
 
     def test_executemany(self):
         con = self._connect()

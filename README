@@ -11,4 +11,13 @@ Documentation is available in HTML format in the ./doc/ directory.
 
 Information running unit tests is in README.unittests.	
 
-good luck !
+Here's a little humour from the original discussion of creating a DBAPI test suite:
+
+ "Now we have booze and barflies entering the discussion, plus rumours of
+  DBAs on drugs... and I won't tell you what flashes through my mind each
+  time I read the subject line with 'Anal Compliance' in it.  All around
+  this is turning out to be a thoroughly unwholesome unit test."
+
+    -- Ian Bicking
+
+enjoy !
