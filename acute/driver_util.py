@@ -3,12 +3,13 @@ import test_dbapi
 import unittest
 import config
 
-class test_Psycopg(test_dbapi.DatabaseAPI20Test):
-    import psycopg2
-    driver = psycopg2
-    connect_args = ()
-    connect_kw_args = config.psycopg2_kw 
-    create_db_cmd = "psql -c 'create database dbapi20_test'"
+db_driver = "psycopg2"
+driver_module = __import__(db_driver)
+
+class test_db_driver(test_dbapi.DBAPITest):
+    driver = driver_module
+    connect_kw_args = config.connect_kw_args[db_driver]
+    create_db_cmd = config.create_db_cmds[db_driver]
     driver_supports = test_dbapi.SupportedFeatures()
 
     def test_nextset(self): pass

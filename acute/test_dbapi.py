@@ -15,7 +15,7 @@ class SupportedFeatures(object):
     transactional_ddl = False
     lower_func = 'lower'
 
-class DatabaseAPI20Test(unittest.TestCase):
+class DBAPITest(unittest.TestCase):
     ''' Test a driver for DB-API compatibility.
         The 'Optional Extensions' are not yet being tested.
 
