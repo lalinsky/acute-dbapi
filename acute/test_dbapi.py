@@ -12,10 +12,14 @@ import time
 import popen2
 import config
 
-db_driver = "psycopg2"
-driver_module = __import__(db_driver)
-
 table_prefix = config.table_prefix
+db_driver = config.db_driver
+if db_driver != 'pysqlite2':
+   driver_module = __import__(config.db_driver)
+else: 
+   #TODO: This is a bit of a hack.  Find a better solution.
+   from pysqlite2 import dbapi2 as driver_module
+
 
 class SupportedFeatures(object): 
     def __init__(self, db_driver): 
@@ -99,8 +103,12 @@ class DBAPITest(unittest.TestCase):
 
     def _connect(self):
         try:
-            con = self.driver.connect(**self.connect_args)
-        except AttributeError:
+            #TODO: This is hackish.. look at dburi instead!
+            if isinstance(self.connect_args, dict):
+               con = self.driver.connect(**self.connect_args)
+            else: 
+               con = self.driver.connect(*self.connect_args) 
+        except 'AttributeError':
             self.fail("No connect method found in self.driver module")
         self._connection = con
         return con
