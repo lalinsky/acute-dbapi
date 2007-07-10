@@ -1,0 +1,29 @@
+..............E.......F.......F....
+======================================================================
+ERROR: test_callproc (__main__.test_Psycopg)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_dbapi.py", line 334, in test_callproc
+    self.assertEqual(len(r),1)
+TypeError: len() of unsized object
+
+======================================================================
+FAIL: test_executemany (__main__.test_Psycopg)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_dbapi.py", line 460, in test_executemany
+    'insert using cursor.executemany set cursor.rowcount to '
+AssertionError: insert using cursor.executemany set cursor.rowcount to incorrect value 1
+
+======================================================================
+FAIL: test_rowcount (__main__.test_Psycopg)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_dbapi.py", line 304, in test_rowcount
+    'cursor.rowcount should be -1 after executing no-result '
+AssertionError: cursor.rowcount should be -1 after executing no-result statements
+
+----------------------------------------------------------------------
+Ran 35 tests in 0.658s
+
+FAILED (failures=2, errors=1)
