@@ -1,0 +1,159 @@
+http://archive.opengroup.org/public/tech/datam/sql.htm
+
+Include metadata methods to: 
+ Declare "limits", such as the number of tables an implementation supports 
+ Max precisions for numeric values and lengths for character strings
+ Diagnostics capabilities
+
+
+http://java.sun.com/j2se/1.3/docs/guide/jdbc/spec/jdbc-spec.frame2.html
+
+"""In order to pass JDBC compliance tests and to be called "JDBC COMPLIANT(TM)" we require that a driver support at least ANSI SQL92 Entry Level. This gives applications that want wide portability a guaranteed least common denominator. We believe ANSI SQL-2 Entry Level is reasonably powerful and is reasonably widely supported today. """
+
+"""We need to ensure that the JDBC SQL API can be implemented on top of common SQL level APIs, in particular ODBC. This requirement has colored some parts of the specification, notably the handling of OUT parameters and large blobs."""
+
+Keep the common cases simple:
+"""A common case is a programmer executing a simple SQL statement (such as a SELECT, INSERT, UPDATE or DELETE) without parameters, and then (in the case of SELECT statement) processing rows of simple result types. A SQL statement with IN parameters is also common.
+
+Somewhat less common, but still important, is the case where a programmer invokes a SQL statement using INOUT or OUT parameters. We also need to support SQL statements that read or write multi-megabyte objects, and less common cases such as multiple result sets returned by a SQL statement.
+
+We expect that metadata access (e.g. to discover result-set types, or to enumerate the procedures in a database) is comparatively rare and is mostly used by sophisticated programmers or by builder tools. Metadata functions are therefore documented at the end of the specification, along with dynamically-typed data access; the average programmer can skip these sections. 
+"""
+
+Column access: 
+"""There are two alternative ways of specifying columns. You can either use column indexes (for greater efficiency) or column names (for greater convenience). Thus for example there is both a getString method that takes a column index and a getString method that takes a column name.
+"""
+
+Exceeding the Connection maxFieldSize limit:
+"""
+If an application uses Connection.setMaxFieldSize to impose a limit on the maximum size of a field, then attempts to read or write a field larger than this will result in the data being silently truncated to the maxFieldSize size, without any SQLException or SQLWarning."""
+
+"""Data truncation on writes
+During writes to the database there is a possibility that the application may attempt to send more data than the driver or the database is prepared to accept. In this case the failing method should raise a DataTruncation exception as a SQLException.
+"""
+
+"""Transactions.
+New JDBC connections are initially in "auto-commit" mode. This means that each statement is executed as a separate transaction at the database.
+
+In order to execute several statements within a single transaction, you must first disable auto- commit by calling Connection.setAutoCommit(false).
+
+When auto-commit is disabled, the connection always has an implicit transaction associated with it. You can execute a Connection.commit to complete the transaction or a Connection.rollback to abort it. The commit or rollback will also start a new implicit transaction.
+
+The exact semantics of transactions and their isolation levels depend on the underlying database. There are methods on java.sql.DatabaseMetaData to learn the current defaults, and on java.sql.Connection to move a newly opened connection to a different isolation level. 
+"""
+
+"""Cursors
+JDBC provides simple cursor support. An application can use ResultSet.getCursorName() to obtain a cursor associated with the current ResultSet. It can then use this cursor name in positioned update or positioned delete statements.
+
+The cursor will remain valid until the ResultSet or its parent Statement is closed.
+
+Note that not all DBMSs support positioned update and delete. The DatabaseMetaData.supportsPositionedDelete and supportsPositionedUpdate methods can be used to discover whether a particular connection supports these operations. When they are supported, the DBMS/driver must insure that rows selected are properly locked so that positioned updates do not result in update anomalies or other concurrency problems.
+
+Currently we do not propose to provide support for either scrollable cursors or ODBC style bookmarks as part of JDBC. 
+"""
+
+"""Scalar Functions
+JDBC supports numeric, string, time, date, system, and conversion functions on scalar values. These functions are indicated by the keyword "fn" followed by the name of the desired function and its arguments. For example, two strings can be concatenated using the concat function
+
+{fn concat("Hot", "Java")}
+
+The name of the current user can be obtained through the syntax
+
+{fn user()}
+
+See the X/Open CLI or ODBC specifications for specifications of the semantics of the scalar functions. The functions supported are listed here for reference. Some drivers may not support all of these functions; to find out which functions are supported, use the folowing DatabaseMe tadata methods: getNumericFunctions() returns a comma separated list of the names of the numeric functions supported, getStringFunctions() does the same for the string functions, and so on.
+
+The numeric functions are ABS(number), ACOS(float), ASIN(float), ATAN(float), ATAN2(float1, float2), CEILING(number), COS(float), COT(float), DEGREES(number), EXP(float), FLOOR(number), LOG(float), LOG10(float), MOD(integer1, integer2), PI(), POWER(number, power), RADIANS(number), RAND(integer), ROUND(number, places), SIGN(number), SIN(float), SQRT(float), TAN(float), and TRUNCATE(number, places).
+
+The string functions are ASCII(string), CHAR(code), CONCAT(string1, string2), DIFFERENCE(string1, string2), INSERT(string1, start, length, string2), LCASE(string), LEFT(string, count), LENGTH(string), LOCATE(string1, string2, start), LTRIM(string), REPEAT(string, count), REPLACE(string1, string2, string3), RIGHT(string, count), RTRIM(string), SOUNDEX(string), SPACE(count), SUBSTRING(string, start, length), and UCASE(string).
+
+The time and date functions are CURDATE(), CURTIME(), DAYNAME(date), DAYOFMONTH(date), DAYHOFWEEK(date), DAYOFYEAR(date), HOUR(time), MINUTE(time), MONTH(time), MONTHNAME(date), NOW(), QUARTER(date), SECOND(time), TIMESTAMPADD(interval, count, timestamp), TIMESTAMPDIFF(interval, timestamp1, timpestamp2), WEEK(date), and YEAR(date).
+
+The system functions are DATABASE(), IFNULL(expression, value), and USER().
+
+There is also a CONVERT(value, SQLtype) expression, where type may be BIGINT, BINARY, BIT, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, INTEGER, LONGVARBINARY, LONGVARCHAR, REAL, SMALLINT, TIME, TIMESTAMP, TINYINT, VARBINARY, and VARCHAR. 
+"""
+
+"""LIKE Escape Characters
+The characters "%" and "_" have special meaning in SQL LIKE clauses (to match zero or more characters, or exactly one character, respectively). In order to interpret them literally, they can be preceded with a special escape character in strings, e.g. "\". In order to specify the escape character used to quote these characters, include the following syntax on the end of the query:
+
+{escape 'escape-character'}
+
+For example, the query
+
+SELECT NAME FROM IDENTIFIERS WHERE ID LIKE '\_%' {escape '\'}
+
+finds identifier names that begin with an underbar. 
+"""
+
+"""
+Outer Joins
+The syntax for an outer join is
+
+{oj outer-join}
+
+where outer-join is of the form
+
+table LEFT OUTER JOIN {table | outer-join} ON search-condition
+
+See the SQL grammar for an explanation of outer joins. Three boolean DatabaseMetaData methods are provided to determine the kinds of outer joins supported by a driver. 
+"""
+
+"""Permitted variants
+The methods in java.sql.Connection, java.sql.Statement, java.sql.PreparedStatement, java.sql.CallableStatement, and java.sql.Resultset should all be supported for all JDBC drivers. For databases which don't support OUT parameters with stored procedures, the various registerOutParameter and getXXX methods of CallableStatement may raise SQLException.
+
+The actual SQL that may be used varies somewhat between databases. For example, different databases provide different support for outer joins. The java.sql.DatabaseMetaData interface provides a number of methods that can be used to determine exactly which SQL features are supported by a particular database. Similarly, the syntax for a number of SQL features may vary between databases and can also be discovered from java.sql.DatabaseMetaData. However, in order to pass JDBC conformance tests a driver must support at least ANSI SQL-2 Entry Level syntax and semantics plus support for the SQL extensions listed in Section 11.
+
+Finally, some fundamental properties, such as transaction isolation levels, vary between databases. The default properties of the current database and the range of properties it supports can also be obtained from DatabaseMetaData.
+
+12.2     Vendor-specific extensions
+JDBC provides a uniform API that is intended to work across all databases. However, database vendors may wish to expose additional functionality that is supported by their databases.
+
+Database vendors may add additional functionality by adding new subtypes of existing JDBC types that provide additional methods. Thus the Foobah corporation might define a new Java type foobah.sql.FooBahStatement that inherits from the standard java.sql.Statement type but adds some new functionality. 
+"""
+
+"""
+http://java.sun.com/j2se/1.3/docs/guide/jdbc/spec/jdbc-spec.frame13.html
+
+JDBC Interface Definitions
+See the separate JDBC API documentation which contains the Java definitions of the core java.sql interfaces and classes listed below.
+
+java.sql.CallableStatement
+java.sql.Connection
+java.sql.DataTruncation
+java.sql.Date
+java.sql.Driver
+java.sql.DriverManager
+java.sql.DriverPropertyInfo
+java.sql.PreparedStatement
+java.sql.ResultSet
+java.sql.SQLException
+java.sql.SQLWarning
+java.sql.Statement
+java.sql.Time
+java.sql.Timestamp
+java.sql.Types
+
+The JDBC API documentation also includes definitions of the JDBC metadata interfaces - java.sql.DatabaseMetaData and java.sql.ResultSetMetaData. See also the short example programs in Appendix B.
+
+The more important relationships between the interfaces are as follows (with arrows showing functions and lines showing other methods)
+"""
+
+"""
+JDBC provides access to a number of different kinds of metadata, describing row results, statement parameters, database properties, etc., etc. We originally attempted to provide this information via extra methods on the core JDBC classes such as java.sql.Connection and java.sql.ResultSet. However, because of the complexity of the metadata methods and because they are likely to be used by only a small subset of JDBC programmers, we decided to split the metadata methods off into two separate Java interfaces.
+
+In general, for each piece of metadata information we have attempted to provide a separate JDBC method that takes appropriate arguments and provides an appropriate Java result type. However, when a method such as Connection.getProcedures() returns a collection of values, we have chosen to use a java.sql.ResultSet to contain the results. The application programmer can then use normal ResultSet methods to iterate over the results.
+
+We considered defining a set of enumeration types for retrieving collections of metadata results, but this seemed to add additional weight to the interface with little real value. JDBC programmers will already be familiar with using ResultSets, so using them for metadata results should not be too onerous.
+
+A number of metadata methods take String search patterns as arguments. These search patterns are the same as for ODBC, where a `_' iimplies a match of any single character and a `%' implies a match of zero or more characters. For catalog and schema values, a Java empty string matches an `unnamed' value; and a Java null String causes that search criteria to be ignored.
+
+The java.sql.ResultSetMetaData type provides a number of methods for discovering the types and properties of the columns of a particular java.sql.ResultSet object.
+
+The java.sql.DatabaseMetaData interface provides methods for retrieving various metadata associated with a database. This includes enumerating the stored procedures in the database, the tables in the database, the schemas in the database, the valid table types, the valid catalogs, finding information on the columns in tables, access rights on columns, access rights on tables, minimal row identification, and so on. 
+"""
+
+
+Test:: 
+  boolean expressions, operators, functions, table aliases, selectable subqueries, create/update/insert/delete queries, correlated updates, correlated EXISTS clauses, UNION clauses, inner and outer joins, bind parameters, free mixing of literal text within expressions, as little or as much as desired. Query-compilation is vendor-specific; the same query object can be compiled into any number of resulting SQL strings depending on its compilation algorithm.
+     * The type system allows pre- and post- processing of data, both at the bind parameter and the result set level. User-defined types can be freely mixed with built-in types. Generic types as well as SQL-specific types are available.
