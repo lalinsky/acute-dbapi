@@ -9,20 +9,18 @@ __author__ = 'Ken Kuhlman <acute@redlagoon.net>'
 
 import unittest
 import time
+import datetime
 import popen2
 import config
+import util
 
 table_prefix = config.table_prefix
-db_driver = config.db_driver
-if db_driver != 'pysqlite2':
-   driver_module = __import__(config.db_driver)
-else: 
-   #TODO: This is a bit of a hack.  Find a better solution.
-   from pysqlite2 import dbapi2 as driver_module
+driver_name = config.driver_name
 
+driver_module = util.import_module(driver_name)
 
 class SupportedFeatures(object): 
-    def __init__(self, db_driver): 
+    def __init__(self, driver_name): 
        """ This is just a placeholder for the day when we've identified the
            differences between the major drivers.  At that point, it should 
            set attributes according to the driver's capabilities.
@@ -31,26 +29,50 @@ class SupportedFeatures(object):
     transactional_ddl = False
     lower_func = 'lower'
 
-class DBAPITest(unittest.TestCase):
-    ''' Test a driver for DB-API compatibility.
-        The 'Optional Extensions' are not yet being tested.
 
-        self.drivers should subclass this test, overriding setUp, tearDown,
-        self.driver, and connect_args. Class specification
-        should be as follows:
+def connect(connection_info=None, connection_method='default'):
+    if connection_info == None:
+        connection_info = config.ConnectionInfo
 
-        import dbapi20 
-        class mytest(dbapi20.DatabaseAPI20Test):
-           [...] 
-    '''
+    args, kwargs = util.convert_connect_args(
+           connection_info, driver_name, connection_method)
 
-    # The driver module defines the 'connect' method 
+    try:
+        con = driver_module.connect(*args, **kwargs)
+    except AttributeError:
+        self.fail("No connect method found in self.driver module")
+    return con
+
+def runOnce():
+    """ Create the db if needed and create_db_cmd is configured."""
+    try:
+        con = connect()
+        con.close()
+    except 'asdfb':
+        create_db_cmd = config.create_db_cmds[driver_name]
+        if create_db_cmd:
+            cout,cin = popen2.popen2(create_db_cmd)
+            cin.close()
+            cout.read()
+        else:
+            raise Exception("Can't connect to database and no "
+                  "create command given")
+
+class Base(unittest.TestCase):
+    """ Base class for the tests. Defines basic setup, Teardown, _connect
+        methods.
+        Only a few 'Optional Extensions' are being tested at this point.
+    """
+
+    # The name of the driver & the driver itself (as imported)
+    driver_name = driver_name
     driver = driver_module
 
     # Keyword arguments for connect
-    connect_args = config.connect_args[db_driver]
-    create_db_cmd = config.create_db_cmds[db_driver]
-    driver_supports = SupportedFeatures(db_driver)
+    connection_info = config.ConnectionInfo()
+    connection_method = config.connection_method
+    create_db_cmd = config.create_db_cmds[driver_name]
+    driver_supports = SupportedFeatures(driver_name)
 
     ddl1 = 'create table %sbooze (name varchar(20))' % table_prefix
     ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
@@ -69,24 +91,9 @@ class DBAPITest(unittest.TestCase):
         if self.driver_supports.transactional_ddl:
            self._connection.commit()
 
-    def setUp(self):
-        """ Override this method if additional setup is needed """
-        try:
-            con = self._connect()
-            con.close()
-        except 'abcdef':
-            if self.create_db_cmd:
-                cout,cin = popen2.popen2(self.create_db_cmd)
-                cin.close()
-                cout.read()
-            else: 
-                raise Exception("Can't connect to database and no "
-                      "create command given")
 
     def tearDown(self):
-        ''' Override this method if cleanup beyond dropping the tables
-            is needed. (Such as dropping the db)
-        '''
+        """ Drop the tables created for the tests. """
         con = self._connect()
         try:
             cur = con.cursor()
@@ -101,18 +108,13 @@ class DBAPITest(unittest.TestCase):
         finally:
             con.close()
 
-    def _connect(self):
-        try:
-            #TODO: This is hackish.. look at dburi instead!
-            if isinstance(self.connect_args, dict):
-               con = self.driver.connect(**self.connect_args)
-            else: 
-               con = self.driver.connect(*self.connect_args) 
-        except 'AttributeError':
-            self.fail("No connect method found in self.driver module")
+    def _connect(self, connection_info=None, connection_method='default'):
+        con = connect(connection_info, connection_method)
+        self.con = con
         self._connection = con
         return con
 
+class TestAcute(Base):
     def test_connect(self):
         con = self._connect()
         con.close()
@@ -135,7 +137,8 @@ class DBAPITest(unittest.TestCase):
         except AttributeError:
             self.fail("Driver doesn't define threadsafety")
 
-    def test_paramstyle(self):
+    def test_globalparamstyle(self):
+        """Driver's paramstyle must be a standard value"""
         try:
             # Must exist
             paramstyle = self.driver.paramstyle
@@ -147,8 +150,7 @@ class DBAPITest(unittest.TestCase):
             self.fail("Driver doesn't define paramstyle")
 
     def test_Exceptions(self):
-        # Make sure required exceptions exist, and are in the
-        # defined heirarchy.
+        """Required exceptions must be in the defined heirachy."""
         self.failUnless(issubclass(self.driver.Warning,StandardError))
         self.failUnless(issubclass(self.driver.Error,StandardError))
         self.failUnless(
@@ -175,9 +177,7 @@ class DBAPITest(unittest.TestCase):
 
     #@testbase.requires('connection_level_exceptions')
     def test_ExceptionsAsConnectionAttributes(self):
-        """ Test the optional extension of exposing exceptions on the
-        connection object.
-        """ 
+        """ Check connection object for the exception attributes (optional)"""
         con = self._connect()
         drv = self.driver
         self.failUnless(con.Warning is drv.Warning)
@@ -201,11 +201,10 @@ class DBAPITest(unittest.TestCase):
 
     ###@testbase.requires('rollback_defined')
     def test_rollback(self):
-        """ Rollback should either work or throw NotSupportedError.  
-        The spec allows drivers that don't support rollback to also 
-        simply not define this method, which is silly.  2 ways to do the same
-        trivial thing!
-        """
+        """ Rollback must work or throw NotSupportedError."""
+        #The spec allows drivers that don't support rollback to also 
+        #simply not define this method, which is silly.  2 ways to do the same
+        #trivial thing!
         con = self._connect()
         if hasattr(con,'rollback'):
             try:
@@ -214,8 +213,7 @@ class DBAPITest(unittest.TestCase):
                 pass
     
     def test_cursor(self):
-        """ Connections must have cursor methods
-        """
+        """ Connections must have cursor methods """
         con = self._connect()
         try:
             cur = con.cursor()
@@ -324,9 +322,7 @@ class DBAPITest(unittest.TestCase):
             con.close()
 
     def test_close(self):
-        """ cursor.execute, cursor.commit, and cursor.close should raise 
-        an Error if called on closed connection
-        """
+        """Can't commit, execute, or close a closed connection """
         con = self._connect()
         try:
             cur = con.cursor()
@@ -820,5 +816,105 @@ class DBAPITest(unittest.TestCase):
             'module.ROWID must be defined.'
             )
 
+
+class TestConnection(Base):
+    def test_success(self):
+        """Successful connect and close"""
+        self._connect()
+        self.con.close()
+
+    #@requires('explicit_db_create')
+    def test_bogusDB(self):
+        """Connection should fail using bogus database"""
+        connection_info = config.ConnectionInfo
+        database = 'NonexistentDatabase'
+        #TODO: Should this be more speciffic, like OperationalError?
+        self.assertRaises(self.driver.Error, 
+                          self._connect, connection_info)
+
+    #@requires('authentication')
+    def test_bogusUser(self):
+        """Connection should fail using bogus username"""
+        connection_info = config.ConnectionInfo
+        connection_info.user = 'kingarthur'
+        self.assertRaises(self.driver.Error,  
+                          self._connect, connection_info)
+
+    #@requires('authentication')
+    def test_bogusPwd(self):
+        """Connection should fail using bogus password"""
+        connection_info = config.ConnectionInfo
+        connection_info.password = 'xyzzy'
+        self.assertRaises(self.driver.Error, 
+                          self._connect, connection_info)
+
+    #@requires('authentication')
+    def test_missingPwd(self):
+        """Connection should fail using blank password"""
+        connection_info = config.ConnectionInfo
+        connection_info.password = ''
+        self.assertRaises(self.driver.Error, 
+                          self._connect, connection_info)
+     
+    def test_commit_nochange(self):
+        """Consecutive commits should be successfull"""
+        self._connect()
+        self.con.commit()
+        self.con.commit()
+
+    def test_rollback_nochange(self):
+        """Consecutive rollbacks should be successfull"""
+        self._connect()
+        self.con.rollback()
+        self.con.rollback()
+
+    def test_cursor(self):
+        """Connections need to be able to create cursors"""
+        self._connect()
+        self.failUnless(self.con.cursor(), "unable to create a cursor")
+
+#TODO: Postgres fails these because it's returning a string. Move to 'intermediate'? -- Date(2007, 05, 01).adapted works, in psycopg2 though
+class TestDateTypes(Base):
+    driver = driver_module
+
+    def test_date(self):
+        print self.driver.Date(2007, 05, 01)
+        print datetime.date(2007, 05, 01)
+        self.assertEqual(self.driver.Date(2007, 05, 01),  
+                         datetime.date(2007, 05, 01))
+
+    def test_time(self):
+        self.assertEqual(self.driver.Time(11, 03, 13), 
+                         datetime.time(11, 03, 13))
+
+    def test_timestamp(self):
+        self.assertEqual(self.driver.Timestamp(2007, 05, 01, 11, 03, 13),
+                         datetime.datetime(2007, 05, 01, 11, 03, 13))
+
+    def test_binary(self):
+        self.assertEqual(self.driver.Binary(chr(0) + "'"), 
+                         buffer(chr(0) + "'"))
+
+    def test_DateFromTicks(self):
+        d = self.driver.DateFromTicks(6798)
+
+    def test_TimeFromTicks(self):
+        t = self.driver.TimeFromTicks(6798)
+
+    def test_TimestampFromTicks(self):
+        ts = self.driver.TimestampFromTicks(6798)
+
+
 if __name__ == '__main__':
-    unittest.main()
+    runOnce()
+    suite = unittest.TestSuite()
+
+    for test in [
+        TestAcute, 
+        #TestConnection, 
+        TestDateTypes,
+        #TestTypesStandalone,
+        ]:
+        suite.addTest(unittest.makeSuite(test))
+
+    unittest.TextTestRunner(verbosity=2).run(suite)

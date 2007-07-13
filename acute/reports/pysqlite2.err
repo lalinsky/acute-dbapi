@@ -1,1 +1,128 @@
-python2.4: can't open file 'driver_util.py': [Errno 2] No such file or directory
+test_BINARY (__main__.TestAcute) ... FAIL
+test_Binary (__main__.TestAcute) ... ok
+test_DATETIME (__main__.TestAcute) ... FAIL
+test_Date (__main__.TestAcute) ... ok
+Required exceptions must be in the defined heirachy. ... ok
+Check connection object for the exception attributes (optional) ... ok
+test_NUMBER (__main__.TestAcute) ... FAIL
+test_None (__main__.TestAcute) ... ok
+test_ROWID (__main__.TestAcute) ... FAIL
+test_STRING (__main__.TestAcute) ... FAIL
+test_Time (__main__.TestAcute) ... ok
+test_Timestamp (__main__.TestAcute) ... ok
+test_apilevel (__main__.TestAcute) ... ok
+test_arraysize (__main__.TestAcute) ... ok
+test_callproc (__main__.TestAcute) ... ok
+Can't commit, execute, or close a closed connection ... FAIL
+Commit must be defined, even if it doesn't do anything ... ok
+test_connect (__main__.TestAcute) ... ok
+Connections must have cursor methods ... ok
+Test isolation levels by making sure two cursors from the same ... ok
+test_description (__main__.TestAcute) ... ERROR
+test_execute (__main__.TestAcute) ... ok
+test_executemany (__main__.TestAcute) ... ok
+test_fetchall (__main__.TestAcute) ... FAIL
+test_fetchmany (__main__.TestAcute) ... FAIL
+test_fetchone (__main__.TestAcute) ... FAIL
+Driver's paramstyle must be a standard value ... ok
+test_mixedfetch (__main__.TestAcute) ... ok
+test_nextset (__main__.TestAcute) ... ok
+Rollback must work or throw NotSupportedError. ... ok
+test_rowcount (__main__.TestAcute) ... ok
+test_setinputsizes (__main__.TestAcute) ... ok
+test_setoutputsize_basic (__main__.TestAcute) ... ok
+test_threadsafety (__main__.TestAcute) ... ok
+test_DateFromTicks (__main__.TestDateTypes) ... ok
+test_TimeFromTicks (__main__.TestDateTypes) ... ok
+test_TimestampFromTicks (__main__.TestDateTypes) ... ok
+test_binary (__main__.TestDateTypes) ... ok
+test_date (__main__.TestDateTypes) ... ok
+test_time (__main__.TestDateTypes) ... ok
+test_timestamp (__main__.TestDateTypes) ... ok
+
+======================================================================
+ERROR: test_description (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 262, in test_description
+    self.assertEqual(cur.description[0][1],self.driver.STRING,
+AttributeError: 'module' object has no attribute 'STRING'
+
+======================================================================
+FAIL: test_BINARY (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 801, in test_BINARY
+    'module.BINARY must be defined.'
+AssertionError: module.BINARY must be defined.
+
+======================================================================
+FAIL: test_DATETIME (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 811, in test_DATETIME
+    'module.DATETIME must be defined.'
+AssertionError: module.DATETIME must be defined.
+
+======================================================================
+FAIL: test_NUMBER (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 806, in test_NUMBER
+    'module.NUMBER must be defined.'
+AssertionError: module.NUMBER must be defined.
+
+======================================================================
+FAIL: test_ROWID (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 816, in test_ROWID
+    'module.ROWID must be defined.'
+AssertionError: module.ROWID must be defined.
+
+======================================================================
+FAIL: test_STRING (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 796, in test_STRING
+    'module.STRING must be defined'
+AssertionError: module.STRING must be defined
+
+======================================================================
+FAIL: Can't commit, execute, or close a closed connection
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 334, in test_close
+    self.assertRaises(self.driver.Error,con.close)
+AssertionError: Error not raised
+
+======================================================================
+FAIL: test_fetchall (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 593, in test_fetchall
+    self.assertRaises(self.driver.Error, cur.fetchall)
+AssertionError: Error not raised
+
+======================================================================
+FAIL: test_fetchmany (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 511, in test_fetchmany
+    self.assertRaises(self.driver.Error,cur.fetchmany,4)
+AssertionError: Error not raised
+
+======================================================================
+FAIL: test_fetchone (__main__.TestAcute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_dbapi.py", line 449, in test_fetchone
+    self.assertRaises(self.driver.Error,cur.fetchone)
+AssertionError: Error not raised
+
+----------------------------------------------------------------------
+Ran 41 tests in 0.788s
+
+FAILED (failures=9, errors=1)
+2007-05-01
+2007-05-01
