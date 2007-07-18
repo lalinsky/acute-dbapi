@@ -1,104 +1,50 @@
-test_BINARY (__main__.TestAcute) ... ok
-test_Binary (__main__.TestAcute) ... ok
-test_DATETIME (__main__.TestAcute) ... ok
-test_Date (__main__.TestAcute) ... ok
-Required exceptions must be in the defined heirachy. ... ok
-Check connection object for the exception attributes (optional) ... ok
-test_NUMBER (__main__.TestAcute) ... ok
-test_None (__main__.TestAcute) ... ok
-test_ROWID (__main__.TestAcute) ... ok
-test_STRING (__main__.TestAcute) ... ok
-test_Time (__main__.TestAcute) ... ok
-test_Timestamp (__main__.TestAcute) ... ok
-test_apilevel (__main__.TestAcute) ... ok
-test_arraysize (__main__.TestAcute) ... ok
-test_callproc (__main__.TestAcute) ... ERROR
-Can't commit, execute, or close a closed connection ... ok
-Commit must be defined, even if it doesn't do anything ... ok
-test_connect (__main__.TestAcute) ... ok
-Connections must have cursor methods ... ok
-Test isolation levels by making sure two cursors from the same ... ok
-test_description (__main__.TestAcute) ... ok
-test_execute (__main__.TestAcute) ... ok
-test_executemany (__main__.TestAcute) ... FAIL
-test_fetchall (__main__.TestAcute) ... ok
-test_fetchmany (__main__.TestAcute) ... ok
-test_fetchone (__main__.TestAcute) ... ok
-Driver's paramstyle must be a standard value ... ok
-test_mixedfetch (__main__.TestAcute) ... ok
-test_nextset (__main__.TestAcute) ... ok
-Rollback must work or throw NotSupportedError. ... ok
-test_rowcount (__main__.TestAcute) ... FAIL
-test_setinputsizes (__main__.TestAcute) ... ok
-test_setoutputsize_basic (__main__.TestAcute) ... ok
-test_threadsafety (__main__.TestAcute) ... ok
-test_DateFromTicks (__main__.TestDateTypes) ... ok
-test_TimeFromTicks (__main__.TestDateTypes) ... ok
-test_TimestampFromTicks (__main__.TestDateTypes) ... ok
-test_binary (__main__.TestDateTypes) ... FAIL
-test_date (__main__.TestDateTypes) ... FAIL
-test_time (__main__.TestDateTypes) ... FAIL
-test_timestamp (__main__.TestDateTypes) ... FAIL
-
+.....................F............................F.E........
 ======================================================================
-ERROR: test_callproc (__main__.TestAcute)
+ERROR: test_datatypes_multi (acute.test_dbapi.TestTypesEmbedded)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "test_dbapi.py", line 311, in test_callproc
-    self.assertEqual(len(r),1)
-TypeError: len() of unsized object
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_requires.py", line 122, in newfunc
+    func(*arg, **kw)
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_dbapi.py", line 1090, in test_datatypes_multi
+    self._insert(self.con, self.cs, table=self.table, data=data)
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_dbapi.py", line 218, in _insert
+    cur.execute(stmt, data)
+ProgrammingError: INSERT has more target columns than expressions
+
+-------------------- >> begin captured stdout << ---------------------
+Connect args: %s, kwarg: %s ([], {'dsn': 'host=localhost dbname=kskuhlman user=kskuhlman password=printer1'})
+data.keys() ['date1', 'timestamp1', 'time1']
+Statement base: insert into apitest_testtypes (date1, timestamp1, time1) values
+
+--------------------- >> end captured stdout << ----------------------
 
 ======================================================================
-FAIL: test_executemany (__main__.TestAcute)
+FAIL: test_executemany (acute.test_dbapi.TestCursor)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "test_dbapi.py", line 427, in test_executemany
-    'insert using cursor.executemany set cursor.rowcount to '
-AssertionError: insert using cursor.executemany set cursor.rowcount to incorrect value 1
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_dbapi.py", line 684, in test_executemany
+    'cursor.fetchall retrieved incorrect number of rows'
+AssertionError: cursor.fetchall retrieved incorrect number of rows
+-------------------- >> begin captured stdout << ---------------------
+Connect args: %s, kwarg: %s ([], {'dsn': 'host=localhost dbname=kskuhlman user=kskuhlman password=printer1'})
+
+--------------------- >> end captured stdout << ----------------------
 
 ======================================================================
-FAIL: test_rowcount (__main__.TestAcute)
+FAIL: test_callproc (acute.test_dbapi.TestSQLProcs)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "test_dbapi.py", line 281, in test_rowcount
-    'cursor.rowcount should be -1 after executing no-result '
-AssertionError: cursor.rowcount should be -1 after executing no-result statements
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_requires.py", line 122, in newfunc
+    func(*arg, **kw)
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/test_dbapi.py", line 1101, in test_callproc
+    self.assertNotEqual(r, None)
+AssertionError: None == None
+-------------------- >> begin captured stdout << ---------------------
+Connect args: %s, kwarg: %s ([], {'dsn': 'host=localhost dbname=kskuhlman user=kskuhlman password=printer1'})
 
-======================================================================
-FAIL: test_binary (__main__.TestDateTypes)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "test_dbapi.py", line 896, in test_binary
-    buffer(chr(0) + "'"))
-AssertionError: <psycopg2._psycopg.Binary object at 0xb7edc818> != <read-only buffer for 0xb7c844c0, size -1, offset 0 at 0xb7c84540>
-
-======================================================================
-FAIL: test_date (__main__.TestDateTypes)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "test_dbapi.py", line 884, in test_date
-    datetime.date(2007, 05, 01))
-AssertionError: <psycopg2._psycopg.datetime object at 0xb7f150b0> != datetime.date(2007, 5, 1)
-
-======================================================================
-FAIL: test_time (__main__.TestDateTypes)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "test_dbapi.py", line 888, in test_time
-    datetime.time(11, 03, 13))
-AssertionError: <psycopg2._psycopg.datetime object at 0xb7f150b0> != datetime.time(11, 3, 13)
-
-======================================================================
-FAIL: test_timestamp (__main__.TestDateTypes)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "test_dbapi.py", line 892, in test_timestamp
-    datetime.datetime(2007, 05, 01, 11, 03, 13))
-AssertionError: <psycopg2._psycopg.datetime object at 0xb7f150b0> != datetime.datetime(2007, 5, 1, 11, 3, 13)
+--------------------- >> end captured stdout << ----------------------
 
 ----------------------------------------------------------------------
-Ran 41 tests in 4.331s
+Ran 61 tests in 3.673s
 
-FAILED (failures=6, errors=1)
-'2007-05-01'
-2007-05-01
+FAILED (failures=2, errors=1)
