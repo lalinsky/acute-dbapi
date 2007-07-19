@@ -57,5 +57,6 @@ if __name__ == '__main__':
 
     #unittest.TextTestRunner(verbosity=2).run(suite)
     runmodule(config=Config(files=all_config_files(),
-                        plugins=DefaultPluginManager([UnsupportedError()]))) 
+              plugins=DefaultPluginManager(
+                         [UnsupportedError(), UnexpectedSuccessError()]))) 
 

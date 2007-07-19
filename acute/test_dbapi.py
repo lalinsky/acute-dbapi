@@ -14,7 +14,8 @@ import datetime
 import popen2
 import config
 import util
-from test_requires import requires
+from nose_plugins.requires import (requires, Unsupported, UnexpectedSuccess,
+                                   UnsupportedError, UnexpectedSuccessError)
 
 class SupportedFeatures(object):
     #TODO: test_requires is still using it's own internal SupportedFeatures func
@@ -60,6 +61,11 @@ table_prefix = config.table_prefix
 driver_name = config.driver_name
 driver_module = util.import_module(driver_name)
 driver_supports = SupportedFeatures(driver_name)
+#TODO: Work with these names.. this is an ugly hack.
+#from nose_plugins import requires as requires_module
+from nose_plugins.requires import set_supported_features
+set_supported_features(driver_supports)       
+
 
 master_table_list = ['testtypes','booze','barflys']
 tables = {}
@@ -1169,16 +1175,25 @@ class TestSQLProcs(Base):
 setup_once()
 if __name__ == '__main__':
     setup_once()
-    suite = unittest.TestSuite()
+    #suite = unittest.TestSuite()
 
-    for test in [
+    #for test in [
         #TestAcute, 
         #TestConnection, 
         #TestDateTypes,
         #TestTypesEmbedded,
-        TestCursor,
+    #    TestCursor,
         #TestSQLProcs,
-        ]:
-        suite.addTest(unittest.makeSuite(test))
+    #    ]:
+    #    suite.addTest(unittest.makeSuite(test))
 
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    #unittest.TextTestRunner(verbosity=2).run(suite)
+    from nose.plugins.errorclass import ErrorClass, ErrorClassPlugin
+    from nose.config import Config, all_config_files
+    from nose.plugins.manager import DefaultPluginManager
+    from nose import runmodule
+
+    runmodule(config=Config(files=all_config_files(),
+              plugins=DefaultPluginManager(
+                         [UnsupportedError(), UnexpectedSuccessError()])))
+

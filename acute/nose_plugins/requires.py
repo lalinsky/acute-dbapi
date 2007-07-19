@@ -32,10 +32,11 @@ class SupportedFeatures(object):
            based off of the feature set of the library.
        """ 
        self.typical_feature = True
-    connection_level_exceptions = True
-    rollback_defined = True
 
 supported_features = SupportedFeatures(library_name)
+def set_supported_features(supported_features):
+    supported_features = supported_features
+
 
 class EnabledErrorClassPlugin(ErrorClassPlugin):
     """ An ErrorClassPlugin with the required stubs in place.
@@ -61,9 +62,6 @@ class UnexpectedSuccess(Exception):
 class UnexpectedSuccessError(ErrorClassPlugin):
     unexepected_success = ErrorClass(UnexpectedSuccess,
         label='UnexpectedSuccess', isfailure=True)
-
-def set_supported_features(supported_features): 
-    self.supported_features = supported_features
 
 def requires(*requirements):
     """This decorator extends nose's fail status code to handle

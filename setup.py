@@ -29,7 +29,7 @@ setup(
     packages = find_packages('acute'),
     package_dir = {'':'acute'},
 
-    test_suite = 'nose.collector',
+    #test_suite = 'nose.collector',
     long_description = """ 
 acute-dbapi is::
 A Python DB-API compliance test suite. It was originally derived from Stuart Bishop's DBAPI20TestSuite.

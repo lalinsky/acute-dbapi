@@ -65,5 +65,5 @@ def convert_connect_args(ConnectionInfo, driver, connection_method='default'):
         raise(Error("Unknown connection method. Can't determine how to "
                     "connect"))
 
-    print "Connect args: %s, kwarg: %s", (args, kwargs)
+    #print "Connect args: %s, kwarg: %s", (args, kwargs)
     return(args, kwargs)
