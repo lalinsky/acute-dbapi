@@ -21,7 +21,15 @@ setup(
     author_email="acute@redlagon.net",
     license="MIT License",
     url = "http://code.google.com/p/acute-dbapi/",
+    ##py_modules=[ 'acute' ],
+    #install_requires=['nose>=0.10a1',],
+    ##extras_requires={
+    ##    'core-testing':["nose", ]
+    ##},
+    packages = find_packages('acute'),
     package_dir = {'':'acute'},
+
+    test_suite = 'nose.collector',
     long_description = """ 
 acute-dbapi is::
 A Python DB-API compliance test suite. It was originally derived from Stuart Bishop's DBAPI20TestSuite.
@@ -47,3 +55,4 @@ SVN version::
          "Topic :: Database :: Front-Ends",
      ]
      )
+
