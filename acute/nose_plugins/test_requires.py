@@ -8,7 +8,6 @@ from nose.plugins.errorclass import ErrorClass, ErrorClassPlugin
 from nose.config import Config, all_config_files
 from nose.plugins.manager import DefaultPluginManager 
 from nose import runmodule 
-#from acute.nose.requires import requires, Unimplemented, UnexpectedSuccess
 from requires import (requires, Unsupported, UnexpectedSuccess,
                       UnsupportedError, UnexpectedSuccessError)
 
@@ -50,18 +49,10 @@ class TestRequires(unittest.TestCase):
         raise nose.plugins.skip.SkipTest
 
 if __name__ == '__main__':
-    #suite = unittest.TestSuite()
-
-    #for test in [
-    #    TestRequires,
-    #    ]:
-    #    suite.addTest(unittest.makeSuite(test))
-
-    #unittest.TextTestRunner(verbosity=2).run(suite)
 
     class SupportedFeatures(object): 
         def __init__(self, library_name): 
-            """ This class should have attributes based off of the
+            """ This class should contain attributes describing the
             feature set of the library.
             """ 
             self.typical_feature = True
