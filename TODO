@@ -1,3 +1,30 @@
+
+Tie into nose's config system so we can have 1 config file per driver, instead of putting everything in
+features.py.
+
+Move tests to test directory.
+
+Break tests out into basic, intermediate, advanced, and alien-tech.
+
+Figure out how to handle testing of multiple DB-API versions.
+
+Supress Unsupported errors, or at least sort them higher.
+
+Create HTML output suitable for describing multiple drivers.  Perhaps a Buffet plugin for Nose?
+
+Add support for as many drivers as we reasonably can.
+
+Survey these drivers for feature sets.
+
+Create a build-bot to run tests on change in either acute-dbapi or drivers under test.
+
+Once all of the above are complete, ask db-sig to vote on tests that should be moved to another support level.
+
+
+------
+The stuff below are ideas gleamed from the work of other standards bodies.
+------
+
 http://archive.opengroup.org/public/tech/datam/sql.htm
 
 Include metadata methods to: 

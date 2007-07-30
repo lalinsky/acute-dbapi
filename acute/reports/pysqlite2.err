@@ -1,162 +1,25 @@
-/home2/kskuhlman/env/initial/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/plugins/manager.py:291: UserWarning: Module nose was already imported from /home2/kskuhlman/env/initial/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/__init__.pyc, but /home2/kskuhlman/projects/acute-dbapi/acute is being added to sys.path
+/home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/plugins/manager.py:291: UserWarning: Module nose was already imported from /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/__init__.pyc, but /home2/kskuhlman/projects/acute-dbapi is being added to sys.path
   import pkg_resources
-EUUUUU....UE.......U.F..............UEU..UUU......E.U..U.UE..
-======================================================================
-ERROR: Connection objects should include the exceptions as attributes (optional)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 103, in newfunc
-    raise(UnexpectedSuccess)
-UnexpectedSuccess
-
-======================================================================
-ERROR: Rollback must work or throw NotSupportedError.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 103, in newfunc
-    raise(UnexpectedSuccess)
-UnexpectedSuccess
-
+.UUUUU....U........U................UEU..UUU......U.E..E.E...
 ======================================================================
 ERROR: test_Binary (__main__.TestModule)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 103, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 96, in newfunc
     raise(UnexpectedSuccess)
 UnexpectedSuccess
 
 ======================================================================
-ERROR: test_callproc (__main__.TestSQLProcs)
+ERROR: test_datatypes_multi (__main__.TestTypesEmbedded)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 103, in newfunc
-    raise(UnexpectedSuccess)
-UnexpectedSuccess
-
-======================================================================
-ERROR: test_time_insert_subsecond_string (__main__.TestTypesEmbedded)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 103, in newfunc
-    raise(UnexpectedSuccess)
-UnexpectedSuccess: 
--------------------- >> begin captured stdout << ---------------------
-data.keys() ['time1']
-Statement base: insert into apitest_testtypes (time1) values
-
---------------------- >> end captured stdout << ----------------------
-
-======================================================================
-FAIL: test_executemany (__main__.TestCursor)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "test_dbapi.py", line 690, in test_executemany
-    'cursor.fetchall retrieved incorrect number of rows'
-AssertionError: cursor.fetchall retrieved incorrect number of rows
-
-======================================================================
-Unsupported: Connection should fail using bogus database
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Connection should fail using bogus password
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Connection should fail using bogus username
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Can't commit, execute, or close a closed connection
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Can't close a closed connection
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Connection should fail using blank password
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Fetch methods should raise Error if no query issued
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.BINARY must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.DATETIME must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.NUMBER must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.ROWID must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.STRING must be defined
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: test_datatypes_multi (__main__.TestTypesEmbedded)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported: 
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 86, in newfunc
+    func(*arg, **kw)
+  File "test_dbapi.py", line 1127, in test_datatypes_multi
+    self._insert(self.con, self.cs, table=self.table, data=data)
+  File "test_dbapi.py", line 174, in _insert
+    cur.execute(stmt, data.values())
+OperationalError: 1 values for 3 columns
 -------------------- >> begin captured stdout << ---------------------
 data.keys() ['date1', 'timestamp1', 'time1']
 Statement base: insert into apitest_testtypes (date1, timestamp1, time1) values
@@ -164,12 +27,16 @@ Statement base: insert into apitest_testtypes (date1, timestamp1, time1) values
 --------------------- >> end captured stdout << ----------------------
 
 ======================================================================
-Unsupported: test_time_insert (__main__.TestTypesEmbedded)
+ERROR: test_time_insert (__main__.TestTypesEmbedded)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported: 
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 86, in newfunc
+    func(*arg, **kw)
+  File "test_dbapi.py", line 1108, in test_time_insert
+    self._insert(self.con, self.cs, table=self.table, data=data)
+  File "test_dbapi.py", line 174, in _insert
+    cur.execute(stmt, data.values())
+InterfaceError: Error binding parameter 0 - probably unsupported type.
 -------------------- >> begin captured stdout << ---------------------
 data.keys() ['time1']
 Statement base: insert into apitest_testtypes (time1) values
@@ -177,22 +44,134 @@ Statement base: insert into apitest_testtypes (time1) values
 --------------------- >> end captured stdout << ----------------------
 
 ======================================================================
-Unsupported: test_time_insert_subsecond (__main__.TestTypesEmbedded)
+ERROR: test_time_insert_subsecond (__main__.TestTypesEmbedded)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 100, in newfunc
-    raise(Unsupported)
-Unsupported: 
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 86, in newfunc
+    func(*arg, **kw)
+  File "test_dbapi.py", line 1120, in test_time_insert_subsecond
+    self._insert(self.con, self.cs, table=self.table, data=data)
+  File "test_dbapi.py", line 174, in _insert
+    cur.execute(stmt, data.values())
+InterfaceError: Error binding parameter 0 - probably unsupported type.
 -------------------- >> begin captured stdout << ---------------------
 data.keys() ['time1']
 Statement base: insert into apitest_testtypes (time1) values
 
 --------------------- >> end captured stdout << ----------------------
 
+======================================================================
+Unsupported: Connection should fail using bogus database
 ----------------------------------------------------------------------
-Ran 61 tests in 1.520s
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
 
-FAILED (failures=1, errors=5)
+======================================================================
+Unsupported: Connection should fail using bogus password
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: Connection should fail using bogus username
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: Can't commit, execute, or close a closed connection
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: Can't close a closed connection
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: Connection should fail using blank password
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: Fetch methods should raise Error if no query issued
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported: 
+-------------------- >> begin captured stdout << ---------------------
+Sane empty fetch False
+
+--------------------- >> end captured stdout << ----------------------
+
+======================================================================
+Unsupported: module.BINARY must be defined.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: module.DATETIME must be defined.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: module.NUMBER must be defined.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: module.ROWID must be defined.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: module.STRING must be defined
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: test_callproc (__main__.TestSQLProcs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+    raise(Unsupported)
+Unsupported
+
+----------------------------------------------------------------------
+Ran 61 tests in 1.563s
+
+FAILED (errors=4)
 tables are: {'booze': 'apitest_booze', 'barflys': 'apitest_barflys', 'testtypes': 'apitest_testtypes'}
 Dropping table apitest_booze
 Dropping table apitest_barflys

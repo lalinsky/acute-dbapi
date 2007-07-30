@@ -23,6 +23,7 @@ from nose.plugins.errorclass import ErrorClass, ErrorClassPlugin
 err = sys.stderr
 library_name = 'fubar'
 
+global supported_features
 supported_features = None
 def set_supported_features(supported_features):
     supported_features = supported_features
@@ -89,6 +90,8 @@ def requires(*requirements):
                 else:
                     raise(Unsupported)
             else:
+                #print "requirements were", requirements_met, requirements
+                #print "features are", supported_features #.getattr(requirements[0])
                 if not requirements_met:
                     raise(UnexpectedSuccess)
 

@@ -14,14 +14,18 @@ import datetime
 import popen2
 import config
 import util
-from nose_plugins.requires import (requires, Unsupported, UnexpectedSuccess,
+import nose_plugins
+from nose_plugins.requires import (requires, supported_features,
+                                   Unsupported, UnexpectedSuccess,
                                    UnsupportedError, UnexpectedSuccessError)
 import features
-from nose_plugins.requires import set_supported_features
 table_prefix = config.table_prefix
 driver_name = config.driver_name
 driver_supports = features.SupportedFeatures(driver_name)
-set_supported_features(driver_supports)
+#set_supported_features(driver_supports)
+nose_plugins.requires.supported_features = driver_supports
+#raise `driver_supports.sane_empty_fetch`
+#raise `nose_plugins.requires.supported_features.sane_empty_fetch`
 
 
 driver_module = util.import_module(driver_name)
@@ -196,7 +200,7 @@ class TestModule(Base):
 
     def test_apilevel(self):
         self.failUnless(hasattr(self.driver, "apilevel"), "Driver must define apilevel")
-        self.assertEqual(self.driver.apilevel, dbapi_level)
+        self.assertEqual(self.driver.apilevel, driver_supports.dbapi_level)
 
     def test_threadsafety(self):
         self.failUnless(hasattr(self.driver, "threadsafety"), "Driver must define threadsafety")
@@ -526,7 +530,6 @@ class TestCursor(Base):
         drop_table(con, cur, tables['booze'], ignore_errors=True)
         drop_table(con, cur, tables['barflys'], ignore_errors=True)        
         try:
-            cur = con.cursor()
             create_table(con, cur, ddl1)
             self.assertEqual(cur.rowcount,-1,
                 'cursor.rowcount should be -1 after executing no-result '
@@ -603,11 +606,10 @@ class TestCursor(Base):
         return populate
 
     def test_executemany(self):
-        con = self._connect()
-
+        con, cur = connect_plus_cursor()
+        drop_table(con, cur, tables['booze'], ignore_errors=True)
         try:
-            cur = con.cursor()
-            #self.executeDDL1(cur)
+            create_table(con, cur, ddl1)
             largs = [ ("Cooper's",) , ("Boag's",) ]
             margs = [ {'beer': "Cooper's"}, {'beer': "Boag's"} ]
             if self.driver.paramstyle == 'qmark':
@@ -646,11 +648,11 @@ class TestCursor(Base):
             cur.execute('select name from %sbooze' % table_prefix)
             res = cur.fetchall()
             self.assertEqual(len(res),2,
-                'cursor.fetchall retrieved incorrect number of rows'
-                )
+                  'cursor.fetchall retrieved incorrect number of rows'
+                  )  
             beers = [res[0][0],res[1][0]]
             beers.sort()
-            self.assertEqual(beers[0],"Boag's",'incorrect data retrieved')
+            self.assertEqual(beers[0],"Boag's",'incorrect data retrieved')            
             self.assertEqual(beers[1],"Cooper's",'incorrect data retrieved')
         finally:
             con.close()
@@ -681,7 +683,10 @@ class TestCursor(Base):
             self.assertEqual(cur.fetchone(),None,
                 'cursor.fetchone should return None if no more rows available'
                 )
-            self.failUnless(cur.rowcount in (-1,1))
+            #TODO: Move this into own test
+            if driver_supports.rowcount_reset_empty_fetch:
+                self.failUnless(cur.rowcount in (-1,0),
+                                "rowcount should be reset after failed fetch")
         finally:
             con.close()
 
@@ -715,7 +720,10 @@ class TestCursor(Base):
                 'cursor.fetchmany should return an empty sequence after '
                 'results are exhausted'
             )
-            self.failUnless(cur.rowcount in (-1,6))
+            #TODO: Move this into it's own test
+            if driver_supports.rowcount_reset_empty_fetch:
+                self.failUnless(cur.rowcount in (-1,0),
+                                "rowcount should be reset after empty fetch")
 
             # Same as above, using cursor.arraysize
             cur.arraysize=4
@@ -728,17 +736,21 @@ class TestCursor(Base):
             self.assertEqual(len(r),2)
             r = cur.fetchmany() # Should be an empty sequence
             self.assertEqual(len(r),0)
-            self.failUnless(cur.rowcount in (-1,6))
+            if driver_supports.rowcount_reset_empty_fetch:
+                self.failUnless(cur.rowcount in (-1,0),
+                                "rowcount should be reset after empty fetch")
 
             cur.arraysize=6
             cur.execute('select name from %sbooze' % table_prefix)
             rows = cur.fetchmany() # Should get all rows
-            self.failUnless(cur.rowcount in (-1,6))
+            if driver_supports.sane_rowcount:
+              #TODO: Move this to own test.
+              self.failUnless(cur.rowcount in (-1,6))
             self.assertEqual(len(rows),6)
             self.assertEqual(len(rows),6)
             rows = [r[0] for r in rows]
             rows.sort()
-          
+
             # Make sure we get the right data back out
             for i in range(0,6):
                 self.assertEqual(rows[i],self.samples[i],
@@ -750,7 +762,9 @@ class TestCursor(Base):
                 'cursor.fetchmany should return an empty sequence if '
                 'called after the whole result set has been fetched'
                 )
-            self.failUnless(cur.rowcount in (-1,6))
+            if driver_supports.rowcount_reset_empty_fetch:
+                self.failUnless(cur.rowcount in (-1,0),
+                                "rowcount should be reset after empty fetch")
 
             create_table(con, cur, ddl2)
             cur.execute('select name from %sbarflys' % table_prefix)
@@ -759,7 +773,8 @@ class TestCursor(Base):
                 'cursor.fetchmany should return an empty sequence if '
                 'query retrieved no rows'
                 )
-            self.failUnless(cur.rowcount in (-1,0))
+            self.failUnless(cur.rowcount in (-1,0),
+                            "rowcount should be reset after empty fetch")
 
         finally:
             con.close()
@@ -775,10 +790,12 @@ class TestCursor(Base):
 
             cur.execute('select name from %sbooze' % table_prefix)
             rows = cur.fetchall()
-            self.failUnless(cur.rowcount in (-1,len(self.samples)))
             self.assertEqual(len(rows),len(self.samples),
                 'cursor.fetchall did not retrieve all rows'
                 )
+            if driver_supports.sane_rowcount:
+              #TODO: Move to own test.  BTW, is sane_rowcount really sane_fetchall_rowcount?
+              self.failUnless(cur.rowcount in (-1,len(self.samples)))
             rows = [r[0] for r in rows]
             rows.sort()
             for i in range(0,len(self.samples)):
@@ -791,7 +808,8 @@ class TestCursor(Base):
                 'cursor.fetchall should return an empty list if called '
                 'after the whole result set has been fetched'
                 )
-            self.failUnless(cur.rowcount in (-1,len(self.samples)))
+            if driver_supports.sane_rowcount:
+              self.failUnless(cur.rowcount in (-1,len(self.samples)))
 
             #self.executeDDL2(cur)
             cur.execute('select name from %sbarflys' % table_prefix)
@@ -808,6 +826,7 @@ class TestCursor(Base):
     def test_emptyfetch(self):
         """ Fetch methods should raise Error if no query issued """
         con, cur = connect_plus_cursor()
+        print "Sane empty fetch", driver_supports.sane_empty_fetch
         self.assertRaises(self.driver.Error,cur.fetchone)
         self.assertRaises(self.driver.Error,cur.fetchmany,4)
         self.assertRaises(self.driver.Error, cur.fetchall)
@@ -842,7 +861,8 @@ class TestCursor(Base):
             rows23 = cur.fetchmany(2)
             rows4  = cur.fetchone()
             rows56 = cur.fetchall()
-            self.failUnless(cur.rowcount in (-1,6))
+            if driver_supports.sane_rowcount:
+              self.failUnless(cur.rowcount in (-1,6))
             self.assertEqual(len(rows23),2,
                 'fetchmany returned incorrect number of rows'
                 )
@@ -908,6 +928,54 @@ class TestCursor(Base):
             self.assertEqual(r[0][0],None,'NULL value not returned as None')
         finally:
             con.close()
+
+    #TODO: Put this in alien_tech
+    #@requires('drop_schema')
+    #def test_drop_schema(self):
+        #cs = db.cursor()
+        #cs.dropschema(object_type="all")
+        #db.commit()
+        
+    #TODO: Put this in alien_tech
+    #@requires('blobs', 'smart_lob_open')
+    #def test_lob_open(self):
+        #from psycopg2 import *
+        #dsn = 'host=%s dbname=%s user=%s password=%s' % (
+        #       'localhost', 'kskuhlman', 'kskuhlman', 'itsasecret')
+        #
+        ##blob_type = 'blob'
+        #blob_type = 'text'
+        #
+        ##con = connect('blob_test')
+        #con = connect(dsn=dsn)
+        #cur = con.cursor()
+        #try:
+        #    #cur.execute('drop table text_table')
+        #    pass
+        #except: 
+        #    try: 
+        #        cur.rollback()
+        #    except: 
+        #        pass
+        #
+        #print "Paramstyle", paramstyle
+        #cur.execute('create table text_table (mylob %s)' % blob_type)
+        #
+        #src = open('test_dbapi.py')
+        #
+        #cur.execute('insert into text_table values(?)', [src.read(),])
+        ##SQLite
+        ##cur.execute('insert into text_table values(?)', [Binary(src.read()),])
+        ##cur.execute('insert into text_table values(?)', [Binary(src),])
+        #
+        ##Postgres
+        #cur.execute('insert into text_table values(%(val)s)', dict(val=Binary(src.read())))
+        #print "read() insert successful"
+        #cur.execute('insert into text_table values(%(val)s)', dict(val=Binary(src)))
+        #print "no read() insert successful"
+        #cur.execute('insert into text_table values(mylob = ?)', src)
+        #print "no Binary insert successful"
+
 
 #TODO: pyscopg2 fails these because it's returning a string. Move to 'intermediate'?
 #TODO:  -- Date(2007, 05, 01).adapted works though
@@ -1023,6 +1091,7 @@ class TestTypesEmbedded(Base):
         self.assertEqual(str(self._get_row(self.table)[3]),timestamp1_string)
         #self.assertEqual(self._get_lastrow()[3],timestamp1)
 
+    @requires('time_datatype')
     def test_time_insert_string(self):
         time1 = '11:03:13'
         time1_time = datetime.time(11, 03, 13)
@@ -1036,13 +1105,13 @@ class TestTypesEmbedded(Base):
         self._insert(self.con, self.cs, table=self.table, data=data)
         self.assertEqual(self._get_row(self.table)[4],data['time1'])
 
-    @requires('time_datatype')
+    @requires('time_datatype_subsecond')
     def test_time_insert_subsecond_string(self):
         time1 = '11:03:13.9999'
         data = dict(time1 = time1)
         self._insert(self.con, self.cs, table=self.table, data=data)
 
-    @requires('time_datatype')
+    @requires('time_datatype_subsecond')
     def test_time_insert_subsecond(self):
         data = dict(time1 = datetime.time(11, 3, 13, 9999))
         self._insert(self.con, self.cs, table=self.table, data=data)
@@ -1061,20 +1130,19 @@ class TestSQLProcs(Base):
         con = self._connect()
         try:
             cur = con.cursor()
-            if driver_supports.lower_func and hasattr(cur,'callproc'):
-                r = cur.callproc(driver_supports.lower_func,('FOO',))
-                self.assertNotEqual(r, None)
-                self.assertEqual(len(r),1)
-                self.assertEqual(r[0],'FOO')
-                r = cur.fetchall()
-                self.assertNotEqual(r, None, 'callproc produced no result set')
-                self.assertEqual(len(r),1,'callproc produced no result set')
-                self.assertEqual(len(r[0]),1,
-                    'callproc produced invalid result set'
-                    )
-                self.assertEqual(r[0][0],'foo',
-                    'callproc produced invalid results'
-                    )
+            r = cur.callproc(driver_supports.lower_func,('FOO',))
+            self.assertNotEqual(r, None)
+            self.assertEqual(len(r),1)
+            self.assertEqual(r[0],'FOO')
+            r = cur.fetchall()
+            self.assertNotEqual(r, None, 'callproc produced no result set')
+            self.assertEqual(len(r),1,'callproc produced no result set')
+            self.assertEqual(len(r[0]),1,
+                'callproc produced invalid result set'
+                )
+            self.assertEqual(r[0][0],'foo',
+                'callproc produced invalid results'
+                )
         finally:
             con.close()
 
