@@ -20,6 +20,7 @@ class SupportedFeatures(object):
             self.transactional_ddl = False
             self.callproc = False
             self.sane_rowcount = False
+            self.time_datatype_time = False
         elif driver_name == 'psycopg2':
             self.serial_key_def = 'serial'
             self.callproc = False
@@ -33,6 +34,7 @@ class SupportedFeatures(object):
     connection_level_exceptions = True
     """ Is rollback defined? """
     rollback_defined = True
+    """ Are stored procedures availabled? """
     call_proc = True
     """ Are databases created explicitly?  Mostly here for SQLite """
     explicit_db_create = True
@@ -49,8 +51,12 @@ class SupportedFeatures(object):
     rowcount_reset_empty_fetch = True
     """ Available datatypes should be defined at the driver level. """
     driver_level_datatypes = True
+    """ Specifically, is the Binary datatype defined at driver level? """
+    driver_level_datatypes_binary = True
     """ Does the driver support the time datatype? (Optional) """
     time_datatype = True
+    """ Does the time datatype support python time values? """
+    time_datatype_time = True
     """ Does the time datatype support subsecond times? """
     time_datatype_subsecond = True
     """ How are serial keys defined in the database? """

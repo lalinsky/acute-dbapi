@@ -22,11 +22,7 @@ import features
 table_prefix = config.table_prefix
 driver_name = config.driver_name
 driver_supports = features.SupportedFeatures(driver_name)
-#set_supported_features(driver_supports)
 nose_plugins.requires.supported_features = driver_supports
-#raise `driver_supports.sane_empty_fetch`
-#raise `nose_plugins.requires.supported_features.sane_empty_fetch`
-
 
 driver_module = util.import_module(driver_name)
 
@@ -34,7 +30,6 @@ master_table_list = ['testtypes','booze','barflys']
 tables = {}
 for table_name in master_table_list:
   tables[table_name] = table_prefix + table_name
-print "tables are: %s" % tables
 
 ddl1 = 'create table %sbooze (name varchar(20))' % table_prefix
 ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
@@ -100,7 +95,6 @@ def tear_down_once():
         con = connect()
         cs = con.cursor()
         try:
-            print 'Dropping table %s' % table
             cs.execute("drop table %s" % table)
             con.commit()
         except driver_module.Error:
@@ -184,6 +178,7 @@ class Base(unittest.TestCase):
         elif self.driver.paramstyle == 'pyformat':
             #stmt = stmt_base + '(%(%s)s)' % data.keys()[0]   #format requires a mapping
             stmt = stmt_base + '(%(' + data.keys()[0] + ')s)'
+            print "Statement is %s" % stmt
             cur.execute(stmt, data)
         else:
             self.fail('Invalid paramstyle')
@@ -257,7 +252,7 @@ class TestModule(Base):
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(t1),str(t2))
 
-    @requires('driver_level_datatypes')
+    @requires('driver_level_datatypes_binary')
     def test_Binary(self):
         b = self.driver.Binary('Something')
         b = self.driver.Binary('')
@@ -1099,7 +1094,7 @@ class TestTypesEmbedded(Base):
         #self.assertEqual(self._get_lastrow()[4],time1_time)
         self.assertEqual(str(self._get_row(self.table)[4]),time1)
 
-    @requires('time_datatype')
+    @requires('time_datatype_time')
     def test_time_insert(self):
         data = dict(time1 = datetime.time(11, 3, 13))
         self._insert(self.con, self.cs, table=self.table, data=data)
@@ -1111,7 +1106,7 @@ class TestTypesEmbedded(Base):
         data = dict(time1 = time1)
         self._insert(self.con, self.cs, table=self.table, data=data)
 
-    @requires('time_datatype_subsecond')
+    @requires('time_datatype_subsecond', 'time_datatype_time')
     def test_time_insert_subsecond(self):
         data = dict(time1 = datetime.time(11, 3, 13, 9999))
         self._insert(self.con, self.cs, table=self.table, data=data)
