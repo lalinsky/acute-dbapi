@@ -22,21 +22,10 @@ from nose.plugins.errorclass import ErrorClass, ErrorClassPlugin
 
 err = sys.stderr
 library_name = 'fubar'
-global supported_features
 
-#from acute import SupportedFeatures
-
-class SupportedFeatures(object): 
-    def __init__(self, library_name): 
-       """ This is just a dummy.  In practice, it would set attributes
-           based off of the feature set of the library.
-       """ 
-       self.typical_feature = True
-
-supported_features = SupportedFeatures(library_name)
+supported_features = None
 def set_supported_features(supported_features):
     supported_features = supported_features
-
 
 class EnabledErrorClassPlugin(ErrorClassPlugin):
     """ An ErrorClassPlugin with the required stubs in place.
@@ -80,6 +69,7 @@ def requires(*requirements):
     somehow succeeded, it would be an 'UnexpectedSuccess.'
     """
 
+    global required_features    
     # Determine if the test is expected to pass
     requirements_met = True
     for req in requirements:

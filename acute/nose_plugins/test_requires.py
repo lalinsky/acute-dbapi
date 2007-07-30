@@ -12,11 +12,6 @@ from nose import runmodule
 from requires import (requires, Unsupported, UnexpectedSuccess,
                       UnsupportedError, UnexpectedSuccessError)
 
-class SupportedFeatures(object): 
-    typical_feature = True
-
-supported_features = SupportedFeatures()
-
 
 class TestRequires(unittest.TestCase):
 
@@ -38,10 +33,17 @@ class TestRequires(unittest.TestCase):
         """
         self.assertEqual(1, 1)
 
-    #@nose.tools.raises(Unsupported)
+    @nose.tools.raises(Unsupported)
     @requires('bogus_feature')
     def test_unsupported(self):
         """ Un-met requirements + failure result = Unsupported (pass) """
+        # This test makes sure that the right error is raised
+        self.assertEqual(1, 2)
+
+    @requires('bogus_feature')
+    def test_unsupported2(self):
+        """ Un-met requirements + failure result = Unsupported (pass) Test 2"""
+        # This test makes sure that the error is not handled as a failure.
         self.assertEqual(1, 2)
    
     def test_skip(self):
@@ -56,7 +58,16 @@ if __name__ == '__main__':
     #    suite.addTest(unittest.makeSuite(test))
 
     #unittest.TextTestRunner(verbosity=2).run(suite)
+
+    class SupportedFeatures(object): 
+        def __init__(self, library_name): 
+            """ This class should have attributes based off of the
+            feature set of the library.
+            """ 
+            self.typical_feature = True
+    library_features = SupportedFeatures(library_name)
+    set_supported_features(supported_features=library_features)
+
     runmodule(config=Config(files=all_config_files(),
               plugins=DefaultPluginManager(
-                         [UnsupportedError(), UnexpectedSuccessError()]))) 
-
+                         [UnsupportedError(), UnexpectedSuccessError()])))

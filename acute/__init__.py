@@ -1,1 +1,1 @@
-
+import nose_plugins

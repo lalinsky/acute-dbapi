@@ -22,12 +22,12 @@ setup(
     license="MIT License",
     url = "http://code.google.com/p/acute-dbapi/",
     ##py_modules=[ 'acute' ],
-    #install_requires=['nose>=0.10a1',],
-    ##extras_requires={
-    ##    'core-testing':["nose", ]
-    ##},
-    packages = find_packages('acute'),
-    package_dir = {'':'acute'},
+    install_requires=['nose>=0.10a1',],
+    extras_requires={
+        'core-testing':["pysqlite", ]
+    },
+    packages = ['acute'],
+    package_dir = {'acute':'acute'},
 
     #test_suite = 'nose.collector',
     long_description = """ 
