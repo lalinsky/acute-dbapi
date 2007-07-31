@@ -1,24 +1,6 @@
 /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/plugins/manager.py:291: UserWarning: Module nose was already imported from /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/__init__.pyc, but /home2/kskuhlman/projects/acute-dbapi is being added to sys.path
   import pkg_resources
-..................................................U.E........
-======================================================================
-ERROR: test_datatypes_multi (__main__.TestTypesEmbedded)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 86, in newfunc
-    func(*arg, **kw)
-  File "test_dbapi.py", line 1127, in test_datatypes_multi
-    self._insert(self.con, self.cs, table=self.table, data=data)
-  File "test_dbapi.py", line 187, in _insert
-    cur.execute(stmt, data)
-ProgrammingError: INSERT has more target columns than expressions
-
--------------------- >> begin captured stdout << ---------------------
-data.keys() ['date1', 'timestamp1', 'time1']
-Statement base: insert into apitest_testtypes (date1, timestamp1, time1) values
-
---------------------- >> end captured stdout << ----------------------
-
+...................................................U...........
 ======================================================================
 Unsupported: test_callproc (__main__.TestSQLProcs)
 ----------------------------------------------------------------------
@@ -28,13 +10,6 @@ Traceback (most recent call last):
 Unsupported
 
 ----------------------------------------------------------------------
-Ran 61 tests in 3.854s
+Ran 63 tests in 4.026s
 
-FAILED (errors=1)
-tables are: {'booze': 'apitest_booze', 'barflys': 'apitest_barflys', 'testtypes': 'apitest_testtypes'}
-Dropping table apitest_booze
-Dropping table apitest_barflys
-Dropping table apitest_testtypes
-Dropping table apitest_booze
-Dropping table apitest_barflys
-Dropping table apitest_testtypes
+OK

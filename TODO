@@ -1,6 +1,8 @@
 
 Tie into nose's config system so we can have 1 config file per driver, instead of putting everything in
-features.py.
+features.py.  Also should be able to allow expressions for dependancies.
+
+Figure out how to control verbosity with the approach I'm using for testrunner.  Also would like better control over test discovery.  Perhaps I need to make 'requires' it's own package & use exit points so I can get back to the default behavior for discovery?
 
 Move tests to test directory.
 

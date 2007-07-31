@@ -2,6 +2,8 @@
 ''' Python DB API 2.0 driver compliance unit test suite.  
 Only a few 'optional extensions' are being tested at this point.
 '''
+#TODO: Use assertRaises from ActiveState scripts
+#TODO: Make sure all tests have comments.
 
 __rcs_id__  = '$Id$'
 __version__ = '$Revision$'[11:-2]
@@ -40,6 +42,7 @@ ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
 #TODO:  Change to be table per column??
 "create table apitest_testtypes (int1 INTEGER, varchar1 VARCHAR(3), date1 date, timestamp1 timestamp,time1 time, clob1 text, blob1 text)"
 
+#TODO: Change to be table per column?  Or just make _insert smarter?
 ddl3 = """create table %s (
         int1 %s,
         varchar1 VARCHAR(3),
@@ -123,7 +126,7 @@ def connect_plus_cursor(connection_info=None, connection_method='default'):
     return con, cs
 
 
-class Base(unittest.TestCase):
+class AcuteBase(unittest.TestCase):
     """ Base class for the tests. Defines basic setup, Teardown, _connect methods. """
 
     # The name of the driver & the driver itself (as imported)
@@ -160,35 +163,34 @@ class Base(unittest.TestCase):
         stmt_base = 'insert into %s (%s) values' % (table, cols)
         if stmt_type == 'select':
             stmt_base = 'select * from %s where %s = ' % (table, data.keys()[0])
-        print "data.keys()", data.keys()
-        print "Statement base:", stmt_base
 
-        if self.driver.paramstyle == 'qmark':
-            stmt = stmt_base + '(?)'
+        data_keys = data.keys()
+        markers = []
+        for xx in range(len(data_keys)):
+            if self.driver.paramstyle == 'qmark':
+                marker = '?'
+            elif self.driver.paramstyle == 'numeric':
+                marker = '(:%s)' % (xx + 1)
+            elif self.driver.paramstyle == 'format':
+                marker = '(%%s)'
+            elif self.driver.paramstyle == 'named':
+                marker = '(:%s)'
+            elif self.driver.paramstyle == 'pyformat':
+                marker = '(%(' + data_keys[xx] + ')s)'
+
+            markers.append(marker)
+        stmt = stmt_base + '(' + list_to_sqllist(markers) +')'
+
+        if self.driver.paramstyle in ('qmark', 'numeric', 'format'):
             cur.execute(stmt, data.values())
-        elif self.driver.paramstyle == 'numeric':
-            stmt = stmt_base + '(:1)'
-            cur.execute(stmt, data.values())
-        elif self.driver.paramstyle == 'format':
-            stmt = stmt_base + '(%%s)'
-            cur.execute(stmt, data.values())
-        elif self.driver.paramstyle == 'named':
-            stmt = stmt_base + '(:%s)'
-            cur.execute(stmt % data.keys()[0], data)
-        elif self.driver.paramstyle == 'pyformat':
-            #stmt = stmt_base + '(%(%s)s)' % data.keys()[0]   #format requires a mapping
-            stmt = stmt_base + '(%(' + data.keys()[0] + ')s)'
-            print "Statement is %s" % stmt
+        elif self.driver.paramstyle in ('named', 'pyformat'):
             cur.execute(stmt, data)
         else:
-            self.fail('Invalid paramstyle')
-
-        #TODO: Move to own test.  A test failure here throws everything off
-        #self.failUnless(cur.rowcount in (-1,1))
-        
+            self.fail('Invalid paramstyle')        
         con.commit()
 
-class TestModule(Base):
+class TestModule(AcuteBase):
+    """ Test module level attributes """
     def test_connect(self):
         con = self._connect()
         con.close()
@@ -232,6 +234,7 @@ class TestModule(Base):
             issubclass(self.driver.NotSupportedError,self.driver.Error)
             )
 
+    #TODO: More datatype tests exist in TestTypes. Consolidate?
     def test_Date(self):
         d1 = self.driver.Date(2002,12,25)
         d2 = self.driver.DateFromTicks(time.mktime((2002,12,25,0,0,0,0,0,0)))
@@ -283,7 +286,7 @@ class TestModule(Base):
         self.driver.ROWID
 
 
-class TestConnection(Base):
+class TestConnection(AcuteBase):
     def test_success(self):
         """Successful connect and close"""
         self._connect()
@@ -373,12 +376,11 @@ class TestConnection(Base):
         self.con.rollback()
         self.con.rollback()
 
-    def test_cursor(self):
+    def test_cursor_create(self):
         """Connections need to be able to create cursors"""
         self._connect()
         self.failUnless(self.con.cursor(), "unable to create a cursor")
 
-    #TODO: Move to test_intermediate?  Or is this pretty much universal?
     @requires('connection_level_exceptions')
     def test_ExceptionsAsConnectionAttributes(self):
         """ Connection objects should include the exceptions as attributes (optional)"""
@@ -416,45 +418,7 @@ class TestConnection(Base):
             except self.driver.NotSupportedError:
                 pass
 
-    #TODO: Move to test_intermediate?  Or is this pretty much universal?
-    @requires('connection_level_exceptions')
-    def test_ExceptionsAsConnectionAttributes(self):
-        """ Connection objects should include the exceptions as attributes (optional)"""
-        con = self._connect()
-        drv = self.driver
-        self.failUnless(con.Warning is drv.Warning)
-        self.failUnless(con.Error is drv.Error)
-        self.failUnless(con.InterfaceError is drv.InterfaceError)
-        self.failUnless(con.DatabaseError is drv.DatabaseError)
-        self.failUnless(con.OperationalError is drv.OperationalError)
-        self.failUnless(con.IntegrityError is drv.IntegrityError)
-        self.failUnless(con.InternalError is drv.InternalError)
-        self.failUnless(con.ProgrammingError is drv.ProgrammingError)
-        self.failUnless(con.NotSupportedError is drv.NotSupportedError)
-
-    def test_commit(self):
-        """ Commit must be defined, even if it doesn't do anything """
-        con = self._connect()
-        try:
-            con.commit()
-        finally:
-            con.close()
-
-    @requires('rollback_defined')
-    def test_rollback(self):
-        """ Rollback must work or throw NotSupportedError."""
-        #The spec allows drivers that don't support rollback to also 
-        #simply not define this method, which is silly.  2 ways to do the same
-        #trivial thing!
-        #TODO: Suggest patch to PEP 249
-        con = self._connect()
-        if hasattr(con,'rollback'):
-            try:
-                con.rollback()
-            except self.driver.NotSupportedError:
-                pass
-
-class TestCursor(Base):
+class TestCursor(AcuteBase):
     #TODO: Test lastrowid after bogus operations like ddl, or insert on table w/out rowid
     
     def test_cursor(self):
@@ -526,9 +490,10 @@ class TestCursor(Base):
         drop_table(con, cur, tables['barflys'], ignore_errors=True)        
         try:
             create_table(con, cur, ddl1)
-            self.assertEqual(cur.rowcount,-1,
-                'cursor.rowcount should be -1 after executing no-result '
-                'statements'
+            #TODO: Check this against PEP 249.  Original code claimed -1 was correct answer
+            self.assertEqual(cur.rowcount,0,
+                'cursor.rowcount should be 0 after executing no-result '
+                'statements, not %s' % cur.rowcount
                 )
             cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
                 table_prefix
@@ -538,19 +503,22 @@ class TestCursor(Base):
                 'set to -1 after executing an insert statement'
                 )
             cur.execute("select name from %sbooze" % table_prefix)
-            self.failUnless(cur.rowcount in (-1,1),
-                'cursor.rowcount should == number of rows returned, or '
-                'set to -1 after executing a select statement'
-                )
+            #TODO: Move to own test.
+            if driver_supports.sane_empty_fetch:
+                self.failUnless(cur.rowcount in (-1,1),
+                    'cursor.rowcount should == number of rows returned, or '
+                    'set to -1 after executing a select statement, not %s.' % cur.rowcount
+                    )
             create_table(con, cur, ddl2)
-            self.assertEqual(cur.rowcount,-1,
-                'cursor.rowcount not being reset to -1 after executing '
-                'no-result statements'
+            #TODO: Check this against PEP 249.  Original code claimed -1 was correct answer
+            self.assertEqual(cur.rowcount,0,
+                'cursor.rowcount not being reset to 0 after executing '
+                'no-result statements. It is %s' % cur.rowcount
                 )
         finally:
             con.close()
         
-    def test_rowcount(self):
+    def test_rowcount_basic(self):
         #self.executeDDL1(cur)
         con, cur = connect_plus_cursor()
         cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
@@ -581,7 +549,7 @@ class TestCursor(Base):
         finally:
             con.close()
 
-    samples = [
+    beer_samples = [
         'Carlton Cold',
         'Carlton Draft',
         'Mountain Goat',
@@ -590,15 +558,15 @@ class TestCursor(Base):
         'XXXX'
         ]
 
-    def _populate(self):
-        ''' Return a list of sql commands to setup the DB for the fetch
-            tests.
-        '''
-        populate = [
-            "insert into %sbooze values ('%s')" % (table_prefix,s) 
-                for s in self.samples
-            ]
-        return populate
+    def _populate(self, cur):
+        """ Insert rows to setup the DB for the fetch tests. """
+        # TODO: Switch name to create_and_populate, move to base?
+        # drop_table(con, cur, tables['booze'], ignore_errors=True)
+        # create_table(con, cur, ddl1)
+
+        for s in self.beer_samples:
+            cur.execute("insert into %sbooze values ('%s')" % (table_prefix,s))
+        #commit?
 
     def test_executemany(self):
         con, cur = connect_plus_cursor()
@@ -692,9 +660,7 @@ class TestCursor(Base):
 
         create_table(con, cur, ddl1)
         try:
-            for sql in self._populate():
-                cur.execute(sql)
-
+            self._populate(cur)
             cur.execute('select name from %sbooze' % table_prefix)
             r = cur.fetchmany()
             self.assertEqual(len(r),1,
@@ -748,7 +714,7 @@ class TestCursor(Base):
 
             # Make sure we get the right data back out
             for i in range(0,6):
-                self.assertEqual(rows[i],self.samples[i],
+                self.assertEqual(rows[i],self.beer_samples[i],
                     'incorrect data retrieved by cursor.fetchmany'
                     )
 
@@ -780,21 +746,19 @@ class TestCursor(Base):
         create_table(con, cur, ddl1)
 
         try:
-            for sql in self._populate():
-                cur.execute(sql)
-
+            self._populate(cur)
             cur.execute('select name from %sbooze' % table_prefix)
             rows = cur.fetchall()
-            self.assertEqual(len(rows),len(self.samples),
+            self.assertEqual(len(rows),len(self.beer_samples),
                 'cursor.fetchall did not retrieve all rows'
                 )
             if driver_supports.sane_rowcount:
               #TODO: Move to own test.  BTW, is sane_rowcount really sane_fetchall_rowcount?
-              self.failUnless(cur.rowcount in (-1,len(self.samples)))
+              self.failUnless(cur.rowcount in (-1,len(self.beer_samples)))
             rows = [r[0] for r in rows]
             rows.sort()
-            for i in range(0,len(self.samples)):
-                self.assertEqual(rows[i],self.samples[i],
+            for i in range(0,len(self.beer_samples)):
+                self.assertEqual(rows[i],self.beer_samples[i],
                 'cursor.fetchall retrieved incorrect rows'
                 )
             rows = cur.fetchall()
@@ -804,7 +768,7 @@ class TestCursor(Base):
                 'after the whole result set has been fetched'
                 )
             if driver_supports.sane_rowcount:
-              self.failUnless(cur.rowcount in (-1,len(self.samples)))
+              self.failUnless(cur.rowcount in (-1,len(self.beer_samples)))
 
             #self.executeDDL2(cur)
             cur.execute('select name from %sbarflys' % table_prefix)
@@ -848,9 +812,7 @@ class TestCursor(Base):
         create_table(con, cur, ddl1)
 
         try:
-            for sql in self._populate():
-                cur.execute(sql)
-
+            self._populate(cur)
             cur.execute('select name from %sbooze' % table_prefix)
             rows1  = cur.fetchone()
             rows23 = cur.fetchmany(2)
@@ -870,8 +832,8 @@ class TestCursor(Base):
             rows.append(rows4[0])
             rows.extend([rows56[0][0],rows56[1][0]])
             rows.sort()
-            for i in range(0,len(self.samples)):
-                self.assertEqual(rows[i],self.samples[i],
+            for i in range(0,len(self.beer_samples)):
+                self.assertEqual(rows[i],self.beer_samples[i],
                     'incorrect data retrieved or inserted'
                     )
         finally:
@@ -974,7 +936,7 @@ class TestCursor(Base):
 
 #TODO: pyscopg2 fails these because it's returning a string. Move to 'intermediate'?
 #TODO:  -- Date(2007, 05, 01).adapted works though
-class TestDateTypes(Base):
+class TestDateTypes(AcuteBase):
     driver = driver_module
 
     def test_date(self):
@@ -1021,7 +983,7 @@ class TestDateTypes(Base):
     def test_TimestampFromTicks(self):
         ts = self.driver.TimestampFromTicks(6798)
 
-class TestTypesEmbedded(Base):
+class TestTypesEmbedded(AcuteBase):
     def setUp(self):
         #Base.setUp(self)
         self.con, self.cs = connect_plus_cursor()
@@ -1111,14 +1073,21 @@ class TestTypesEmbedded(Base):
         data = dict(time1 = datetime.time(11, 3, 13, 9999))
         self._insert(self.con, self.cs, table=self.table, data=data)
 
-    @requires('time_datatype')
+    @requires('time_datatype_time')
     def test_datatypes_multi(self):
         data = dict(date1=datetime.date(1970, 4, 1),
                     timestamp1=datetime.datetime(2005, 11, 10, 11, 52, 35, 54839),
                     time1=datetime.time(23, 59, 59))
         self._insert(self.con, self.cs, table=self.table, data=data)
+        
+    @requires('time_datatype')
+    def test_datatypes_multi_string(self):
+        data = dict(date1='1970-04-01',
+                    timestamp1='2007-05-01 11:03:13',
+                    time1='11:03:13')
+        self._insert(self.con, self.cs, table=self.table, data=data)
 
-class TestSQLProcs(Base):
+class TestSQLProcs(AcuteBase):
 
     @requires('callproc', 'lower_func')
     def test_callproc(self):
@@ -1161,38 +1130,30 @@ class TestSQLProcs(Base):
         raise NotImplementedError,'Helper not implemented'
         #cur.execute("drop procedure deleteme")
 
+    @requires('callproc')
     def test_nextset(self):
-        con = self._connect()
+        con, cur = connect_plus_cursor()
+        drop_table(con, cur, tables['booze'], ignore_errors=True)
+        create_table(con, cur, ddl1)
+        self._populate(cur)
+
         try:
-            cur = con.cursor()
-            if not hasattr(cur,'nextset'):
-                return
-
-            try:
-                #self.executeDDL1(cur)
-                sql=self._populate()
-                for sql in self._populate():
-                    cur.execute(sql)
-
-                self.help_nextset_setUp(cur)
-
-                cur.callproc('deleteme')
-                numberofrows=cur.fetchone()
-                assert numberofrows[0]== len(self.samples)
-                assert cur.nextset()
-                names=cur.fetchall()
-                assert len(names) == len(self.samples)
-                s=cur.nextset()
-                assert s == None,'No more return sets, should return None'
-            finally:
-                self.help_nextset_tearDown(cur)
-
+            self.help_nextset_setUp(cur)
+            cur.callproc('deleteme')
+            numberofrows=cur.fetchone()
+            assert numberofrows[0]== len(self.beer_samples)
+            assert cur.nextset()
+            names=cur.fetchall()
+            assert len(names) == len(self.beer_samples)
+            s=cur.nextset()
+            assert s == None,'No more return sets, should return None'
         finally:
+            self.help_nextset_tearDown(cur)
             con.close()
 
     def test_nextset(self):
     #TODO:    raise NotImplementedError,'Drivers need to override this test'
-         pass 
+        pass 
 
 setup_once()
 if __name__ == '__main__':
