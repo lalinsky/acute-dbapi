@@ -1,15 +1,83 @@
 /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/plugins/manager.py:291: UserWarning: Module nose was already imported from /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/__init__.pyc, but /home2/kskuhlman/projects/acute-dbapi is being added to sys.path
   import pkg_resources
-...................................................U...........
+................U.........SSSSS...SS......................S............
 ======================================================================
-Unsupported: test_callproc (__main__.TestSQLProcs)
+SKIP: cs.execute() - INSERT (NULL)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cs.execute() - INSERT (Wrong # of params)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cs.execute() - INSERT (Right truncation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cs.execute() - INSERT (Wrong type)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cursor.lastrowid should be set on insert with identity col.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 87, in newfunc
+    func(*arg, **kw)
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: test_scrollable (__main__.TestCursor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: test_scrollable_basic (__main__.TestCursor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: test_callproc (__main__.TestSQLProcs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 87, in newfunc
+    func(*arg, **kw)
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+Unsupported: BLOB (file)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
 ----------------------------------------------------------------------
-Ran 63 tests in 4.026s
+Ran 71 tests in 5.428s
 
 OK

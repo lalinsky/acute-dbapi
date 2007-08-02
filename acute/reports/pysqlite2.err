@@ -1,11 +1,69 @@
 /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/plugins/manager.py:291: UserWarning: Module nose was already imported from /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/__init__.pyc, but /home2/kskuhlman/projects/acute-dbapi is being added to sys.path
   import pkg_resources
-.UUUUU....U........U.................U.U..UUU......U.U...U.U...
+.UUUUU....U...U.U...U.....SSSSS...SS.......U.U..UUU.......U..U...U.U...
+======================================================================
+SKIP: cs.execute() - INSERT (NULL)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cs.execute() - INSERT (Wrong # of params)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cs.execute() - INSERT (Right truncation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cs.execute() - INSERT (Wrong type)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: cursor.lastrowid should be set on insert with identity col.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 87, in newfunc
+    func(*arg, **kw)
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: test_scrollable (__main__.TestCursor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
+======================================================================
+SKIP: test_scrollable_basic (__main__.TestCursor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
+    raise(SkipTest)
+SkipTest
+
 ======================================================================
 Unsupported: Connection should fail using bogus database
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -13,7 +71,7 @@ Unsupported
 Unsupported: Connection should fail using bogus password
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -21,7 +79,7 @@ Unsupported
 Unsupported: Connection should fail using bogus username
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -29,7 +87,7 @@ Unsupported
 Unsupported: Can't commit, execute, or close a closed connection
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -37,7 +95,7 @@ Unsupported
 Unsupported: Can't close a closed connection
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -45,7 +103,23 @@ Unsupported
 Unsupported: Connection should fail using blank password
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: test_BLOB_fetchmany (__main__.TestCursor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
+    raise(Unsupported)
+Unsupported
+
+======================================================================
+Unsupported: BLOB (file)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -53,19 +127,15 @@ Unsupported
 Unsupported: Fetch methods should raise Error if no query issued
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
-Unsupported: 
--------------------- >> begin captured stdout << ---------------------
-Sane empty fetch False
-
---------------------- >> end captured stdout << ----------------------
+Unsupported
 
 ======================================================================
 Unsupported: module.BINARY must be defined.
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -73,7 +143,7 @@ Unsupported
 Unsupported: module.DATETIME must be defined.
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -81,7 +151,7 @@ Unsupported
 Unsupported: module.NUMBER must be defined.
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -89,7 +159,7 @@ Unsupported
 Unsupported: module.ROWID must be defined.
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -97,7 +167,7 @@ Unsupported
 Unsupported: module.STRING must be defined
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -105,7 +175,7 @@ Unsupported
 Unsupported: test_callproc (__main__.TestSQLProcs)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -113,7 +183,7 @@ Unsupported
 Unsupported: test_datatypes_multi (__main__.TestTypesEmbedded)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -121,7 +191,7 @@ Unsupported
 Unsupported: test_time_insert (__main__.TestTypesEmbedded)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
@@ -129,11 +199,11 @@ Unsupported
 Unsupported: test_time_insert_subsecond (__main__.TestTypesEmbedded)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 91, in newfunc
+  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
     raise(Unsupported)
 Unsupported
 
 ----------------------------------------------------------------------
-Ran 63 tests in 2.228s
+Ran 71 tests in 2.632s
 
 OK

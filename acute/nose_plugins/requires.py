@@ -19,6 +19,7 @@ import os
 import unittest
 import nose
 from nose.plugins.errorclass import ErrorClass, ErrorClassPlugin
+from nose.plugins.skip import SkipTest
 
 err = sys.stderr
 library_name = 'fubar'
@@ -87,6 +88,8 @@ def requires(*requirements):
             except:
                 if requirements_met:
                     raise
+                elif 'amiracle' in requirements:
+                    raise(SkipTest)
                 else:
                     raise(Unsupported)
             else:
