@@ -34,7 +34,7 @@ def convert_connect_args(ConnectionInfo, driver, connection_method='default'):
 
     if connection_method == "default":
        if driver == 'db2':
-           connection_method = 'parameterized'
+           connection_method = 'delimeted_string'
        elif driver == 'psycopg2':
            connection_method = 'spaced_string'
        elif driver == 'pysqlite2':
@@ -47,6 +47,7 @@ def convert_connect_args(ConnectionInfo, driver, connection_method='default'):
     database = ConnectionInfo.database
     username = ConnectionInfo.username
     password = ConnectionInfo.password
+    port = ConnectionInfo.port
  
     args = []
     kwargs = {}
@@ -61,6 +62,13 @@ def convert_connect_args(ConnectionInfo, driver, connection_method='default'):
     elif connection_method == 'spaced_string':
         kwargs = {'dsn':'host=%s dbname=%s user=%s password=%s' % 
                        (hostname, database, username, password)}
+    elif connection_method == 'delimited_string':
+        if port:
+            args = ["DATABASE=%s;HOSTNAME=%s;PORT=%s;PROTOCOL=TCPIP;UID=%s;PWD=%s;"
+                    % ( database, hostname, port, username, passwd)]
+        else: 
+            args = ["DATABASE=%s;UID=%s;PWD=%s;"
+                    % ( database, name, passwd)]
     else:
         raise(Error("Unknown connection method. Can't determine how to "
                     "connect"))

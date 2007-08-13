@@ -23,6 +23,7 @@ class ConnectionInfo(object):
     database = db_name
     username = 'kskuhlman'
     password = 'itsasecret'
+    port = None
     
 # Database creation commands per database supported by this test suite.
 create_db_cmds = {
