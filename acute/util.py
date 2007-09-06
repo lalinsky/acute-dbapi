@@ -27,14 +27,17 @@ def convert_connect_args(ConnectionInfo, driver, connection_method='default'):
       spaced_string: a single parm of 'dsn' is given as keyword=value pairs
       default: use the default connection argument format for this driver
 
-    Default connection_methods are currently known for psycopg2 & pysqlite2.
+    Default connection_methods are currently known for psycopg2, pysqlite2,
+      mysql, db2
     """
     #TODO: Consider using a URL instead of a class in config. 
     #TODO: See dburi.py for ideas
 
     if connection_method == "default":
        if driver == 'db2':
-           connection_method = 'delimeted_string'
+           connection_method = 'delimited_string'
+       elif driver == "MySQLdb":
+           connection_method = "mysql"
        elif driver == 'psycopg2':
            connection_method = 'spaced_string'
        elif driver == 'pysqlite2':
@@ -57,6 +60,13 @@ def convert_connect_args(ConnectionInfo, driver, connection_method='default'):
             'uid': username,
             'pwd': password,
             }
+    elif connection_method == 'mysql':
+        kwargs = dict(
+            host = hostname,
+            user = username,
+            passwd = password,
+            db = database 
+            )
     elif connection_method == 'dbonly':
         args = [database]
     elif connection_method == 'spaced_string':

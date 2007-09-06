@@ -44,19 +44,22 @@ ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
 "create table apitest_testtypes (int1 INTEGER, varchar1 VARCHAR(3), date1 date, timestamp1 timestamp,time1 time, clob1 text, blob1 text)"
 
 #TODO: Change to be table per column?  Or just make _insert smarter?
-ddl3 = """create table %s (
-        int1 %s,
+ds = driver_supports
+ddl3 = ("""create table %s (
+        int_fld %s,
         varchar1 VARCHAR(3),
         date1 date,
         timestamp1 timestamp,
-        time1 time,
-        clob1 text,
-        blob1 text
-        )
-        """ % ('apitest_testtypes', driver_supports.serial_key_def,)
+        time1 time,  
+        clob1 %s,
+        blob1 %s
+        )"""
+        % ('apitest_testtypes', ds.serial_key_def, ds.clob_type,
+              ds.blob_type, ))
+print "DDL3:", ddl3
 
 def create_table(con, cs, statement):
-    #print "Create table statement is", statement
+    print "Create table statement is", statement
     cs.execute(statement)
     if driver_supports.transactional_ddl:
       con.commit()
@@ -138,7 +141,7 @@ class AcuteBase(unittest.TestCase):
     #TODO: Change to support URIs instead of this custom class.  
     connection_info = config.ConnectionInfo()
     connection_method = config.connection_method
-    create_db_cmd = config.create_db_cmds[driver_name]
+    create_db_cmd = config.create_db_cmds.get(driver_name, None)
 
     def _connect(self, *args, **kwarg):
       con = connect(*args, **kwarg)
@@ -173,7 +176,7 @@ class AcuteBase(unittest.TestCase):
             elif self.driver.paramstyle == 'numeric':
                 marker = '(:%s)' % (xx + 1)
             elif self.driver.paramstyle == 'format':
-                marker = '(%%s)'
+                marker = '(%s)'
             elif self.driver.paramstyle == 'named':
                 marker = '(:%s)'
             elif self.driver.paramstyle == 'pyformat':
@@ -183,6 +186,8 @@ class AcuteBase(unittest.TestCase):
         stmt = stmt_base + '(' + list_to_sqllist(markers) +')'
 
         if self.driver.paramstyle in ('qmark', 'numeric', 'format'):
+            print "Format is", self.driver.paramstyle
+            print "Statement is", stmt
             cur.execute(stmt, data.values())
         elif self.driver.paramstyle in ('named', 'pyformat'):
             cur.execute(stmt, data)
@@ -1131,7 +1136,7 @@ class TestCursor(AcuteBase):
             elif self.driver.paramstyle == 'named':
                 cs.execute("INSERT INTO %s VALUES (:%s, :%s)" % self.tableName, data)
             elif ps == 'format':
-                cs.execute("INSERT INTO %s VALUES (%%s, %%s)" % self.tableName, data)
+                cs.execute("INSERT INTO %s VALUES (%s, %s)" % self.tableName, data)
             elif ps == 'pyformat':
                 cs.execute("INSERT INTO %s VALUES ((%%(P1)s), (%%(P2)s))" %
                        self.tableName, data)
