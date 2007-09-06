@@ -17,15 +17,14 @@ import datetime
 import popen2
 import config
 import util
-import nose_plugins
-from nose_plugins.requires import (requires, supported_features,
-                                   Unsupported, UnexpectedSuccess,
-                                   UnsupportedError, UnexpectedSuccessError)
+import decorators
+from decorators import requires, raises, supported_features
 import features
+
 table_prefix = config.table_prefix
 driver_name = config.driver_name
 driver_supports = features.SupportedFeatures(driver_name)
-nose_plugins.requires.supported_features = driver_supports
+decorators.supported_features = driver_supports
 
 driver_module = util.import_module(driver_name)
 
@@ -56,10 +55,10 @@ ddl3 = ("""create table %s (
         )"""
         % ('apitest_testtypes', ds.serial_key_def, ds.clob_type,
               ds.blob_type, ))
-print "DDL3:", ddl3
+#print "DDL3:", ddl3
 
 def create_table(con, cs, statement):
-    print "Create table statement is", statement
+    #print "Create table statement is", statement
     cs.execute(statement)
     if driver_supports.transactional_ddl:
       con.commit()
@@ -1329,24 +1328,17 @@ class TestSQLProcs(AcuteBase):
 setup_once()
 if __name__ == '__main__':
     setup_once()
-    #suite = unittest.TestSuite()
+    suite = unittest.TestSuite()
 
-    #for test in [
-        #TestAcute, 
-        #TestConnection, 
-        #TestDateTypes,
-        #TestTypesEmbedded,
-    #    TestCursor,
-        #TestSQLProcs,
-    #    ]:
-    #    suite.addTest(unittest.makeSuite(test))
+    for test in [
+        TestModule,
+        TestModuleDatatypes,
+        TestConnection, 
+        TestCursor,
+        TestTypesEmbedded,
+        TestSQLProcs,
+        ]:
+        suite.addTest(unittest.makeSuite(test))
 
-    #unittest.TextTestRunner(verbosity=2).run(suite)
-    from nose.plugins.errorclass import ErrorClass, ErrorClassPlugin
-    from nose.config import Config, all_config_files
-    from nose.plugins.manager import DefaultPluginManager
-    from nose import runmodule
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
-    runmodule(config=Config(files=all_config_files(),
-              plugins=DefaultPluginManager(
-                         [UnsupportedError(), UnexpectedSuccessError()])))
