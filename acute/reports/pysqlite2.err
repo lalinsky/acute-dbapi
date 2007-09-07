@@ -1,209 +1,76 @@
-/home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/plugins/manager.py:291: UserWarning: Module nose was already imported from /home2/kskuhlman/env/acute/lib/python2.4/nose-0.10.0a2-py2.4.egg/nose/__init__.pyc, but /home2/kskuhlman/projects/acute-dbapi is being added to sys.path
-  import pkg_resources
-.UUUUU....U...U.U...U.....SSSSS...SS.......U.U..UUU.......U..U...U.U...
-======================================================================
-SKIP: cs.execute() - INSERT (NULL)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
-    raise(SkipTest)
-SkipTest
-
-======================================================================
-SKIP: cs.execute() - INSERT (Wrong # of params)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
-    raise(SkipTest)
-SkipTest
-
-======================================================================
-SKIP: cs.execute() - INSERT (Right truncation)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
-    raise(SkipTest)
-SkipTest
-
-======================================================================
-SKIP: cs.execute() - INSERT (Wrong type)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
-    raise(SkipTest)
-SkipTest
-
-======================================================================
-SKIP: cursor.lastrowid should be set on insert with identity col.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 87, in newfunc
-    func(*arg, **kw)
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
-    raise(SkipTest)
-SkipTest
-
-======================================================================
-SKIP: test_scrollable (__main__.TestCursor)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
-    raise(SkipTest)
-SkipTest
-
-======================================================================
-SKIP: test_scrollable_basic (__main__.TestCursor)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 92, in newfunc
-    raise(SkipTest)
-SkipTest
-
-======================================================================
-Unsupported: Connection should fail using bogus database
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Connection should fail using bogus password
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Connection should fail using bogus username
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Can't commit, execute, or close a closed connection
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Can't close a closed connection
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Connection should fail using blank password
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: test_BLOB_fetchmany (__main__.TestCursor)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: BLOB (file)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: Fetch methods should raise Error if no query issued
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.BINARY must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.DATETIME must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.NUMBER must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.ROWID must be defined.
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: module.STRING must be defined
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: test_callproc (__main__.TestSQLProcs)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: test_datatypes_multi (__main__.TestTypesEmbedded)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: test_time_insert (__main__.TestTypesEmbedded)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
-
-======================================================================
-Unsupported: test_time_insert_subsecond (__main__.TestTypesEmbedded)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home2/kskuhlman/projects/acute-dbapi/acute/nose_plugins/requires.py", line 94, in newfunc
-    raise(Unsupported)
-Unsupported
+Required exceptions are in the defined heirachy. ... ok
+Driver defines apilevel ... ok
+Can connect to database ... ok
+Driver defines paramstyle ... ok
+Driver defines threadsafety ... ok
+Module defines BINARY ... (Unsupported) ok
+Module supports Binary ... ok
+Module defines DATETIME ... (Unsupported) ok
+Module supports Date and DateFromTicks ... ok
+Module supports DateFromTicks ... ok
+Module defines NUMBER ... (Unsupported) ok
+Module defines ROWID ... (Unsupported) ok
+Module defines STRING ... (Unsupported) ok
+Module supports Time and TimeFromTicks ... ok
+Module supports TimeFromTicks ... ok
+Module supports Timestamp and TimestampFromTicks ... ok
+Module supports TimestampFromTicks ... ok
+Module's date is equivalent to datetime's date ... ok
+Module's time attribute is equivalent to datetime's time ... ok
+Module's Timestamp attribute is equivalent to datetime's datetime ... ok
+Connection objects should include the exceptions as attributes (optional) ... ok
+Connection should fail using bogus database ... (Unsupported) ok
+Connection should fail using bogus password ... (Unsupported) ok
+Connection should fail using bogus username ... (Unsupported) ok
+Can't commit, execute, or close a closed connection ... (Unsupported) ok
+Can't close a closed connection ... (Unsupported) ok
+Can't commit, execute, or close a closed connection ... ok
+Commit must be defined, even if it doesn't do anything ... ok
+Consecutive commits should be successfull ... ok
+Connections need to be able to create cursors ... ok
+Connection should fail using blank password ... (Unsupported) ok
+Rollback must work or throw NotSupportedError. ... ok
+Consecutive rollbacks should be successfull ... ok
+Successful connect and close ... ok
+Fetchmany works with BLOBs. ... (Unsupported) ok
+Cursor must define arraysize ... ok
+BLOB (file) ... (Unsupported) ok
+Connections must have cursor method ... ok
+A cursor can read it's own uncommited data ... ok
+Cursor description describes columns correctly ... ok
+Fetch methods should raise Error if no query issued ... (Unsupported) ok
+Insert multiple rows using executemany ... ok
+Fetchall retrieves rows & sets rowcount ... ok
+Fetchall returns accurate data ... ok
+Fetchmany retrieves rows & sets rowcount ... ok
+Fetchone retrieves row & sets rowcount ... ok
+Insert a row with Null columns ... (Skipped) ok
+Inserting wrong number of columns raises ProgrammingError ... (Skipped) ok
+Insert that overflows column size raises ProgrammingError ... (Skipped) ok
+Insert using the wrong datatype raises TypeError ... (Skipped) ok
+Insert into identity column sets cursor.lastrowid ... (Skipped) ok
+Can mix fetchone, fetchmany, and fetchall ... ok
+Rowcount matches the number of rows inserted ... ok
+Rowcount should be 1 after singleton insert ... ok
+Scrollable cursors stay open after commits (test is broken) ... (Skipped) ok
+Scrollable cursors are set with cursor.set_scrollable ... (Skipped) ok
+Insert works with cursor.setinputsize ... ok
+Insert works with cursor.setoutputsize ... ok
+Handle Python's None as a database null ... ok
+Insert a multitude of date/time datatypes in one statement using datetime ... (Unsupported) ok
+Insert a multitude of date/time datatypes in one statement using strings ... ok
+Insert dates using datetime dates ... ok
+Insert dates using strings ... ok
+Insert time using datetime's time ... (Unsupported) ok
+Insert time using string ... ok
+Insert time with subsecond precision using datetime's time ... (Unsupported) ok
+Insert time with subsecond precision using string ... ok
+Insert timestamp using datetime's datetime ... ok
+Insert timestamp using strings ... ok
+Call a stored procedure (experimental) ... (Skipped) ok
+Stored procedure calls return result sets ... (Unsupported) ok
 
 ----------------------------------------------------------------------
-Ran 71 tests in 2.632s
+Ran 71 tests in 2.580s
 
 OK

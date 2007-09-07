@@ -38,7 +38,7 @@ BLOB (file) ... (Unsupported) ok
 Connections must have cursor method ... ok
 A cursor can read it's own uncommited data ... ok
 Cursor description describes columns correctly ... ok
-Fetch methods should raise Error if no query issued ... ok
+Fetch methods should raise Error if no query issued ... (Unsupported) ok
 Insert multiple rows using executemany ... ok
 Fetchall retrieves rows & sets rowcount ... ok
 Fetchall returns accurate data ... ok
@@ -55,22 +55,22 @@ Rowcount should be 1 after singleton insert ... ok
 Scrollable cursors stay open after commits (test is broken) ... (Skipped) ok
 Scrollable cursors are set with cursor.set_scrollable ... (Skipped) ok
 Insert works with cursor.setinputsize ... ok
-Insert works with cursor.setoutputsize ... ok
+Insert works with cursor.setoutputsize ... (Unsupported) ok
 Handle Python's None as a database null ... ok
 Insert a multitude of date/time datatypes in one statement using datetime ... ok
 Insert a multitude of date/time datatypes in one statement using strings ... ok
 Insert dates using datetime dates ... ok
 Insert dates using strings ... ok
-Insert time using datetime's time ... ok
+Insert time using datetime's time ... (Unsupported) ok
 Insert time using string ... ok
 Insert time with subsecond precision using datetime's time ... ok
 Insert time with subsecond precision using string ... ok
 Insert timestamp using datetime's datetime ... ok
-Insert timestamp using strings ... ok
+Insert timestamp with subsecond precision using strings ... (Unsupported) ok
 Call a stored procedure (experimental) ... (Skipped) ok
 Stored procedure calls return result sets ... (Unsupported) ok
 
 ----------------------------------------------------------------------
-Ran 71 tests in 4.849s
+Ran 71 tests in 0.833s
 
 OK
