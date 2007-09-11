@@ -1,6 +1,6 @@
 # The name of the db-api compliant driver to import
-#driver_name = "pysqlite2"
-driver_name = "psycopg2"
+driver_name = "pysqlite2"
+#driver_name = "psycopg2"
 #driver_name = "MySQLdb"
 
 # What format does the driver expect it's connection arguments in?

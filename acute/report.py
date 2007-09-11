@@ -73,11 +73,11 @@ def dump_supported_features():
             value = getattr(driver_features, feature)
             (doc, supports) = features.get(feature, ['', []])
             if not doc:
-               doc = value.__doc__
+               doc_attr = '_' + feature + '__doc__'
+               doc = getattr(driver_features, doc_attr)
             supports.append(value)
 
             features[feature] = (doc, supports)
-            #print feature, doc, value
 
     #Output the summary & introduction section
     print """#summary Comparison of core features provided by several DB-API implementations. \
@@ -101,5 +101,5 @@ to a particular driver are not covered.
 
 if __name__ == '__main__':
     dump_testcase_reports()
-    #dump_supported_features()
+    dump_supported_features()
 

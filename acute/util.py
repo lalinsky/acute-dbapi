@@ -34,7 +34,7 @@ def convert_connect_args(ConnectionInfo, driver, connection_method='default'):
     #TODO: See dburi.py for ideas
 
     if connection_method == "default":
-       if driver == 'db2':
+       if driver == 'ibm_db':
            connection_method = 'delimited_string'
        elif driver == "MySQLdb":
            connection_method = "mysql"

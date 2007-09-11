@@ -37,8 +37,8 @@ def requires(*requirements):
     global required_features
     # Determine if the test is expected to pass
     requirements_met = True
-    print ("requires requirements: %s.  Supported: %s" % 
-               (requirements, supported_features))
+    #print ("requires requirements: %s.  Supported: %s" % 
+    #           (requirements, supported_features))
     for req in requirements:
         if not getattr(supported_features, req, None):
             requirements_met = False

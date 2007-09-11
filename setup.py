@@ -26,14 +26,16 @@ setup(
     package_dir = {'acute':'acute'},
 
     #test_suite = 'nose.collector',
+
+    #TODO: This is also the project summary page on google code. Keep in sync.
     long_description = """ 
-acute-dbapi is::
-A Python DB-API compliance test suite. It was originally derived from Stuart Bishop's DBAPI20TestSuite.
+Welcome to the home page for acute-dbapi, a DB-API compliance test suite.  Acute is still in it's infancy, but it's reached the level of maturity that it would benefit from community input.  It currently contains 71 tests, and many more will be added soon.
 
-The name stands for "Anal Compliance Unit Test Environment," which is a tip-of-the-hat to Stuart, who described his testsuite in those terms.
+Comments, suggestions, and patches are all warmly welcome.  There are several TODOs listed in the [TODO] file, and many more generously sprinkled throughout the code; if you'd like to help out but don't know where to begin, feel free to take a crack at one of them!
 
-SVN version::
- <http:/http://acute-dbapi.googlecode.com/svn/trunk/>
+Please read the project's [README] for an introduction to the suite.  You'll also find usage, architecture, and project philosophy information there.
+
+If you just want to see the results, take a look at TestResults, and DriverFeatures on the project wiki.
 """,
     classifiers = [
          "Development Status :: 4 - Beta",

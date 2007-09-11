@@ -18,10 +18,10 @@ python test-dbapi.py
 == Adding Support for Drivers ==
 acute-dbapi currently supports pysqlite2, MySQLdb, and psycopg2.  There are reports on driver functionality at the project's "wiki" as DriverFeatures `[3]` and TestResults `[4]`.
 
-There is a list of driver-supported features in "features.py".   A set of class attributes on the "SupportedFeatures" class define the default, expected, behavior for each feature.   These are overriden for each driver in the initialization method of the class to specify any quirks of the driver's implementation.
+There is a list of driver-supported features in "features.py".   A set of class attributes on the `SupportedFeatures` class define the default, expected, behavior for each feature.   These are overriden for each driver in the initialization method of the class to specify any quirks of the driver's implementation.
 
 == Architecture ==
-The testsuite is designed such that all tests are expected to pass when the driver's features are setup correctly in "features.py".  There are two mechanisms to support this:  first, if a feature under test isn't supported by a driver, then that test will still be run but will be converted to an 'Unsupported' status upon failure; if the test suceeds despite the fact that the driver is declared to not support the feature, then the second mechanism kicks in and the testsuite raises an 'UnexpectedSuccess' error.  The only tests that will be skipped are those that are under active development (these are the tests that are declared with @require('amiracle')).   This setup makes it simpler to track which tests are truly in error versus the known failings of the driver.
+The testsuite is designed such that all tests are expected to pass when the driver's features are setup correctly in "features.py".  There are two mechanisms to support this:  first, if a feature under test isn't supported by a driver, then that test will still be run but will be converted to an 'Unsupported' status upon failure; if the test suceeds despite the fact that the driver is declared to not support the feature, then the second mechanism kicks in and the testsuite raises an `UnexpectedSuccess` error.  The only tests that will be skipped are those that are under active development (these are the tests that are declared with @require('amiracle')).   This setup makes it simpler to track which tests are truly in error versus the known failings of the driver.
 
 Tests that are under active development will be skipped.  These tests are declared with a @require('amiracle') decorator.
 
@@ -57,4 +57,3 @@ enjoy!
  *4 http://code.google.com/p/acute-dbapi/wiki/TestResults
 
  *5 http://www.postgresql.org/docs/8.2/static/features.html
-

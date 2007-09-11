@@ -1,12 +1,14 @@
+#summary Thank you to everyone that made acute-dbapi possible!
 
-Stuart Bishop 
-    Created the original DB-API 2.0 test suite
-    http://stuartbishop.net/Software/DBAPI20TestSuite/
+Stuart Bishop, for creating the original DB-API 2.0 test suite
+    * http://stuartbishop.net/Software/DBAPI20TestSuite/
 
-Jason Pellerin
-    For nose in general and for helpng with the 'requires' decorator in particular.
-    http://code.google.com/p/python-nose/
-    http://somethingaboutorange.com/mrl/projects/nose/
-    http://groups.google.com/group/nose-users/browse_frm/thread/504d7a14bffacd37
+Marc-André Lemburg, for PEP 249.
+    * http://www.python.org/dev/peps/pep-0249/
 
+Manas Dadarkar and Swetha Patel at IBM, for encouraging me to write this testsuite. 
 
+The DB-SIG and all of the DB-API driver authors for sharing their work with the world.
+    * http://www.python.org/topics/database/
+    * http://mail.python.org/pipermail/db-sig/
+    * http://www.python.org/topics/database/modules.html
