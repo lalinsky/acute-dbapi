@@ -8,7 +8,7 @@ Acute-dbapi is very much a work in progress.   Feel free to contribute patches f
 
 == Usage ==
 To use, first checkout the current trunk:
-svn co https://acute-dbapi.googlecode.com/svn/trunk acute-dbabpi
+svn co http://acute-dbapi.googlecode.com/svn/trunk acute-dbabpi
 
 Then cd to acute-dbapi/acute and update config.py to match your database driver, the database name to use & your credentials for that database.
 
