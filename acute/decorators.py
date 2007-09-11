@@ -15,16 +15,6 @@ If the test somehow succeeded, it would be an 'UnexpectedSuccess.'
 """
 
 import unittest, re, sys, os, operator
-from cStringIO import StringIO
-#import testlib.config as config
-
-_ops = { '<': operator.lt,
-         '>': operator.gt,
-         '==': operator.eq,
-         '!=': operator.ne,
-         '<=': operator.le,
-         '>=': operator.ge,
-         'in': operator.contains }
 
 class Unsupported(Exception):
     pass
@@ -33,8 +23,8 @@ class UnexpectedSuccess(Exception):
 class DidNotRaise(Exception):
     pass
 
-global supported_features
-supported_features = None
+
+# A dummpy class that will get over-writing in real usage.
 class SF(object):
     typical_feature = True
 supported_features = SF()
@@ -43,11 +33,12 @@ def set_supported_features(supported_features):
 
 
 def requires(*requirements):
+    "Declare a test as requiring a feature or list of features in order to succeed."
     global required_features
     # Determine if the test is expected to pass
     requirements_met = True
-    #print ("requires requirements: %s.  Supported: %s" % 
-    #           (requirements, supported_features))
+    print ("requires requirements: %s.  Supported: %s" % 
+               (requirements, supported_features))
     for req in requirements:
         if not getattr(supported_features, req, None):
             requirements_met = False
@@ -64,7 +55,6 @@ def requires(*requirements):
                 if requirements_met:
                     raise
                 elif 'amiracle' in requirements:
-                    #raise(SkipTest)
                     print >> sys.stderr, "(Skipped) ",
                 else:
                     print >> sys.stderr, "(Unsupported) ",
@@ -78,81 +68,8 @@ def requires(*requirements):
     return decorate
 
 
-
-def sa_unsupported(*dbs):
-    """Mark a test as unsupported by one or more database implementations"""
-    
-    def decorate(fn):
-        fn_name = fn.__name__
-        def maybe(*args, **kw):
-            if config.db.name in dbs:
-                print "'%s' unsupported on DB implementation '%s'" % (
-                    fn_name, config.db.name)
-                return True
-            else:
-                return fn(*args, **kw)
-        try:
-            maybe.__name__ = fn_name
-        except:
-            pass
-        return maybe
-    return decorate
-
-def sa_supported(*dbs):
-    """Mark a test as supported by one or more database implementations"""
-    
-    def decorate(fn):
-        fn_name = fn.__name__
-        def maybe(*args, **kw):
-            if config.db.name in dbs:
-                return fn(*args, **kw)
-            else:
-                print "'%s' unsupported on DB implementation '%s'" % (
-                    fn_name, config.db.name)
-                return True
-        try:
-            maybe.__name__ = fn_name
-        except:
-            pass
-        return maybe
-    return decorate
-
-def sa_exclude(db, op, spec):
-    """Mark a test as unsupported by specific database server versions.
-
-    Stackable, both with other excludes and supported/unsupported. Examples::
-      # Not supported by mydb versions less than 1, 0
-      @exclude('mydb', '<', (1,0))
-      # Other operators work too
-      @exclude('bigdb', '==', (9,0,9))
-      @exclude('yikesdb', 'in', ((0, 3, 'alpha2'), (0, 3, 'alpha3')))
-    """
-
-    def decorate(fn):
-        fn_name = fn.__name__
-        def maybe(*args, **kw):
-            if config.db.name != db:
-                return fn(*args, **kw)
-
-            have = config.db.dialect.server_version_info(
-                config.db.contextual_connect())
-
-            oper = hasattr(op, '__call__') and op or _ops[op]
-
-            if oper(have, spec):
-                print "'%s' unsupported on DB %s version '%s'" % (
-                    fn_name, config.db.name, have)
-                return True
-            else:
-                return fn(*args, **kw)
-        try:
-            maybe.__name__ = fn_name
-        except:
-            pass
-        return maybe
-    return decorate
-
 def raises(exception):
+    "Declare that a test will raise a particular error."
     def decorate(func):
         name = func.__name__
         doc = func.__doc__
@@ -183,8 +100,6 @@ class TestRequires(unittest.TestCase):
         """ Requirements met + failure result = failure """
         self.assertEqual(1, 2)
 
-    #TODO: Was relying on nose.tools.raises
-    #@nose.tools.raises(UnexpectedSuccess)
     @raises(UnexpectedSuccess)
     @requires('bogus_feature')
     def test_unexpected_success(self):
@@ -205,25 +120,13 @@ class TestRequires(unittest.TestCase):
         # This test makes sure that the error is not handled as a failure.
         self.assertEqual(1, 2)
    
-    #def test_skip(self):
-    #    raise nose.plugins.skip.SkipTest
 
 if __name__ == "__main__":
-    class SupportedFeatures(object): 
-        def __init__(self, library_name): 
-            """ This class should contain attributes describing the
-            feature set of the library.
-            """ 
-            self.typical_feature = True
-    library_name = 'junk'
-    library_features = SupportedFeatures(library_name)
-    set_supported_features(supported_features=library_features)
-
 
     suite = unittest.TestSuite()
 
     for test in [TestRequires]:
         suite.addTest(unittest.makeSuite(test))
 
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=3).run(suite)
 

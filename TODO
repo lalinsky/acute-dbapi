@@ -1,13 +1,11 @@
+#summary A list of TODOs for the project.
 
- # Move tests into test directory & break tests out into functional areas.  Annotate all tests with basic, intermediate, advanced, or alien-tech, and add support for this to features.py & reports.py.  For basic metadata such as "what does this db call a CLOB type," find a better solution than using SupportedFeatures -- these kinds of things are currently mudding up the feature system.
+ * Move tests into test directory & break tests out into functional areas.  Annotate all tests with basic, intermediate, advanced, or alien-tech, and add support for this to features.py & reports.py.  For basic metadata such as "what does this db call a CLOB type," find a better solution than using SupportedFeatures -- these kinds of things are currently mudding up the feature system.
 
- # Figure out how to handle testing of multiple DB-API versions, (& multiple driver versions, too).
+ * Figure out how to handle testing of multiple DB-API versions, (& multiple driver versions, too).
 
- # Add support for as many drivers as we reasonably can. Survey these drivers for common feature sets as we go.
+ * Add support for as many drivers as we reasonably can. Survey these drivers for common feature sets as we go. # Clean up report.py so that it directly creates the wiki pages (currently using a hybrid of auto-generated & manual editing).  Also should create wrapper functions for creating tables so it'll be easier to change wiki engines -- google code's wiki isn't very feature rich.
 
- # Clean up report.py so that it directly creates the wiki pages (currently using a hybrid of auto-generated & manual editing).  Also should create wrapper functions for creating tables so it'll be easier to change wiki engines -- google code's wiki isn't very feature rich. 
+ * Create a build-bot to run tests on change in either acute-dbapi or drivers under test.
 
- # Create a build-bot to run tests on change in either acute-dbapi or drivers under test.
-
- # Once all of the above are complete, ask db-sig to vote on tests that should be moved to another conformance level.
-
+ * Once all of the above are complete, ask db-sig to vote on tests that should be moved to another conformance level.
