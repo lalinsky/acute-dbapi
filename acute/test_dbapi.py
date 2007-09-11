@@ -364,7 +364,7 @@ class TestConnection(AcuteBase):
         self.con.close()
 
     def test_close_commit(self):
-        """Can't commit, execute, or close a closed connection """
+        """Can't commit a closed connection"""
         con = connect()
         con.close()
         self.assertRaises(self.driver.Error,con.commit)
@@ -1346,6 +1346,7 @@ class TestSQLProcs(AcuteBase):
         #TODO: Implement this.
         #cur.execute("drop procedure deleteme")
 
+    @requires('amiracle')
     @requires('callproc', 'nextset')
     def test_nextset(self):
         '''Stored procedure calls return result sets'''

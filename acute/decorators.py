@@ -69,10 +69,7 @@ def requires(*requirements):
                 else:
                     print >> sys.stderr, "(Unsupported) ",
             else:
-                #print ("requirements were met? %s.  They were: %s" %
-                #        (requirements_met, requirements))
-                #print "supported features are ::", supported_features #.getattr(requirements[0])
-                if not requirements_met:
+                if not requirements_met and not 'amiracle' in requirements:
                     raise(UnexpectedSuccess)
 
         newfunc.__name__ = name

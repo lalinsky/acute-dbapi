@@ -24,7 +24,7 @@ Connection should fail using bogus password ... (Unsupported) ok
 Connection should fail using bogus username ... (Unsupported) ok
 Can't commit, execute, or close a closed connection ... (Unsupported) ok
 Can't close a closed connection ... (Unsupported) ok
-Can't commit, execute, or close a closed connection ... ok
+Can't commit a closed connection ... ok
 Commit must be defined, even if it doesn't do anything ... ok
 Consecutive commits should be successfull ... ok
 Connections need to be able to create cursors ... ok
@@ -32,7 +32,7 @@ Connection should fail using blank password ... (Unsupported) ok
 Rollback must work or throw NotSupportedError. ... ok
 Consecutive rollbacks should be successfull ... ok
 Successful connect and close ... ok
-Fetchmany works with BLOBs. ... (Unsupported) ok
+Fetchmany works with BLOBs. ... ok
 Cursor must define arraysize ... ok
 BLOB (file) ... (Unsupported) ok
 Connections must have cursor method ... ok
@@ -66,11 +66,11 @@ Insert time using string ... ok
 Insert time with subsecond precision using datetime's time ... (Unsupported) ok
 Insert time with subsecond precision using string ... ok
 Insert timestamp using datetime's datetime ... ok
-Insert timestamp using strings ... ok
+Insert timestamp with subsecond precision using strings ... ok
 Call a stored procedure (experimental) ... (Skipped) ok
 Stored procedure calls return result sets ... (Unsupported) ok
 
 ----------------------------------------------------------------------
-Ran 71 tests in 2.580s
+Ran 71 tests in 2.706s
 
 OK

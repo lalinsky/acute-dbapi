@@ -24,7 +24,7 @@ Connection should fail using bogus password ... ok
 Connection should fail using bogus username ... ok
 Can't commit, execute, or close a closed connection ... ok
 Can't close a closed connection ... ok
-Can't commit, execute, or close a closed connection ... ok
+Can't commit a closed connection ... ok
 Commit must be defined, even if it doesn't do anything ... ok
 Consecutive commits should be successfull ... ok
 Connections need to be able to create cursors ... ok
@@ -71,6 +71,6 @@ Call a stored procedure (experimental) ... (Skipped) ok
 Stored procedure calls return result sets ... (Unsupported) ok
 
 ----------------------------------------------------------------------
-Ran 71 tests in 0.833s
+Ran 71 tests in 1.108s
 
 OK
