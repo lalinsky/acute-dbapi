@@ -3,7 +3,6 @@
 Only a few 'optional extensions' are being tested at this point.
 '''
 #TODO: Use assertRaises from ActiveState scripts
-#TODO: Make sure all tests have comments.
 #TODO: Fix this all the tests that require 'amiracle'. (These tests are skipped).
 
 __rcs_id__  = '$Id$'
@@ -19,12 +18,13 @@ import config
 import util
 import decorators
 from decorators import requires, raises, supported_features
-import features
+import drivers
 
 table_prefix = config.table_prefix
 driver_name = config.driver_name
-driver_supports = features.SupportedFeatures(driver_name)
-decorators.supported_features = driver_supports
+DriverMeta = getattr(drivers, driver_name) 
+driver_supports = DriverMeta
+decorators.supported_features = DriverMeta
 
 driver_module = util.import_module(driver_name)
 
@@ -43,7 +43,7 @@ ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
 "create table apitest_testtypes (int1 INTEGER, varchar1 VARCHAR(3), date1 date, timestamp1 timestamp,time1 time, clob1 text, blob1 text)"
 
 #TODO: Change to be table per column?  Or just make _insert smarter?
-ds = driver_supports
+ds = DriverMeta
 ddl3 = ("""create table %s (
         int_fld %s,
         varchar1 VARCHAR(3),
@@ -73,14 +73,16 @@ def drop_table(con, cs, table, ignore_errors=False):
        con.commit()
 
 def setup_once():
-    """ Create the tables used in the tests. 
-    Also Create the db if needed and create_db_cmd is configured.
-    """
+    "Create the tables used in the tests. Also create the db if needed."
     tear_down_once()
     try:
         con = connect()
     except:
-        create_db_cmd = config.create_db_cmds[driver_name]
+        try:
+            create_db_cmd = DriverMeta.get_create_db_cmd(connection_info)
+        except NotImplementedError:
+            create_db_cmd = ''
+
         if create_db_cmd:
             cout,cin = popen2.popen2(create_db_cmd)
             cin.close()
@@ -140,7 +142,6 @@ class AcuteBase(unittest.TestCase):
     #TODO: Change to support URIs instead of this custom class.  
     connection_info = config.ConnectionInfo()
     connection_method = config.connection_method
-    create_db_cmd = config.create_db_cmds.get(driver_name, None)
 
     def _connect(self, *args, **kwarg):
       con = connect(*args, **kwarg)

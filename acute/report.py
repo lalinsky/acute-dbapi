@@ -62,13 +62,14 @@ def dump_testcase_reports():
 
 
 def dump_supported_features():
-    from features import SupportedFeatures
+    import drivers
     features = OrderedDict()
-    for nbr, driver_features in enumerate([SupportedFeatures, SupportedFeatures('pysqlite2'),
-               SupportedFeatures('MySQLdb'), SupportedFeatures('psycopg2')]): #, SupportedFeatures('pydb2')]):
+    for nbr, driver_features in enumerate([drivers.DriverBase, drivers.pysqlite2, 
+               drivers.MySQLdb, drivers.psycopg2, drivers.ibm_db]):
         for feature in dir(driver_features):
-            if feature[:1] == '_':
-                continue
+            if (feature[:1] == '_' or 
+                hasattr(getattr(driver_features, feature), '__call__')):
+                continue   # Skip private attributes & methods
 
             value = getattr(driver_features, feature)
             (doc, supports) = features.get(feature, ['', []])

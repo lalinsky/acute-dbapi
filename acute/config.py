@@ -23,10 +23,4 @@ class ConnectionInfo(object):
     username = 'kskuhlman'
     password = 'itsasecret'
     port = None
-    
-# Database creation commands per database supported by this test suite.
-create_db_cmds = {
-   'psycopg2' : "psql -c 'create database %s'" % ConnectionInfo.database,
-   'db2' : "db2 create database %s'" % ConnectionInfo.database,
-   'pysqlite2' : None
-}
+
