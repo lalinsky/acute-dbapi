@@ -41,21 +41,21 @@ ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
 #TODO:   Note that pysqlite was still allowing inserts, see "test null violations" note below
 #TODO: Had to change CLOB & BLOB to text for postgres
 #TODO:  Change to be table per column??
-"create table apitest_testtypes (int1 INTEGER, varchar1 VARCHAR(3), date1 date, timestamp1 timestamp,time1 time, clob1 text, blob1 text)"
 
 #TODO: Change to be table per column?  Or just make _insert smarter?
-dm = driver_meta
-ddl3 = ("""create table %s (
+tm = driver_meta.typemap
+ddl3 = ("""create table %stesttypes (
         int_fld %s,
-        varchar1 VARCHAR(3),
-        date1 date,
-        timestamp1 timestamp,
-        time1 time,  
+        varchar1 %s(3),
+        date1 %s,
+        timestamp1 %s,
+        time1 %s, 
         clob1 %s,
         blob1 %s
         )"""
-        % ('apitest_testtypes', dm.serial_key_def, dm.clob_type,
-              dm.blob_type, ))
+        % (table_prefix, tm.serial, tm.string, tm.date, tm.timestamp, 
+           tm.time, tm.clob, tm.blob)
+)
 #print "DDL3:", ddl3
 
 def create_table(con, cs, statement):
@@ -1129,9 +1129,7 @@ class TestCursor(AcuteBase):
           cs.execute("drop table %s" % self.tableName)
         except:
           con.rollback()
-        #cs.execute("CREATE TABLE %s ( P1 BLOB(1024), P2 BLOB(1024) )"
-        #                % self.tableName)
-        bt = driver_supports.blob_type
+        bt = driver_meta.typemap.blob
         cs.execute("CREATE TABLE %s ( P1 %s, P2 %s )" % (self.tableName, bt, bt))
 
     @requires('smart_lob_open')
