@@ -23,8 +23,9 @@ import drivers
 table_prefix = config.table_prefix
 driver_name = config.driver_name
 DriverMeta = getattr(drivers, driver_name) 
-driver_supports = DriverMeta
-decorators.supported_features = DriverMeta
+driver_meta = DriverMeta()
+driver_supports = driver_meta
+decorators.supported_features = driver_meta
 
 driver_module = util.import_module(driver_name)
 
@@ -43,7 +44,7 @@ ddl2 = 'create table %sbarflys (name varchar(20))' % table_prefix
 "create table apitest_testtypes (int1 INTEGER, varchar1 VARCHAR(3), date1 date, timestamp1 timestamp,time1 time, clob1 text, blob1 text)"
 
 #TODO: Change to be table per column?  Or just make _insert smarter?
-ds = DriverMeta
+dm = driver_meta
 ddl3 = ("""create table %s (
         int_fld %s,
         varchar1 VARCHAR(3),
@@ -53,8 +54,8 @@ ddl3 = ("""create table %s (
         clob1 %s,
         blob1 %s
         )"""
-        % ('apitest_testtypes', ds.serial_key_def, ds.clob_type,
-              ds.blob_type, ))
+        % ('apitest_testtypes', dm.serial_key_def, dm.clob_type,
+              dm.blob_type, ))
 #print "DDL3:", ddl3
 
 def create_table(con, cs, statement):
@@ -79,7 +80,7 @@ def setup_once():
         con = connect()
     except:
         try:
-            create_db_cmd = DriverMeta.get_create_db_cmd(connection_info)
+            create_db_cmd = driver_meta.get_create_db_cmd(connection_info)
         except NotImplementedError:
             create_db_cmd = ''
 
@@ -113,8 +114,7 @@ def connect(connection_info=None, connection_method='default'):
     if connection_info == None:
         connection_info = config.ConnectionInfo
 
-    args, kwargs = util.convert_connect_args(
-           connection_info, driver_name, connection_method)
+    args, kwargs = driver_meta.convert_connect_args(connection_info)
 
     try:
         con = driver_module.connect(*args, **kwargs)
