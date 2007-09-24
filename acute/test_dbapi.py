@@ -149,20 +149,11 @@ class AcuteBase(unittest.TestCase):
       return con
 
     def _insert(self, con, cur, table=None, data=None, stmt_type='insert'):
-        def list_to_sqllist(list):
-            elems = len(list)
-            res = ''
-            for pos, item in enumerate(list):
-                res += item
-                if pos < elems - 1:
-                    res += ', '
-            return res
-
         if not table:
             table = table_prefix + 'booze'
         if not data:
             data = dict(name="Coopers")
-        cols = list_to_sqllist(data.keys())
+        cols = ", ".join(data)
 
         stmt_base = 'insert into %s (%s) values' % (table, cols)
         if stmt_type == 'select':
@@ -178,12 +169,12 @@ class AcuteBase(unittest.TestCase):
             elif self.driver.paramstyle == 'format':
                 marker = '(%s)'
             elif self.driver.paramstyle == 'named':
-                marker = '(:%s)'
+                marker = '(:%s)' % data_keys[xx]
             elif self.driver.paramstyle == 'pyformat':
                 marker = '(%(' + data_keys[xx] + ')s)'
 
             markers.append(marker)
-        stmt = stmt_base + '(' + list_to_sqllist(markers) +')'
+        stmt = "%s(%s)" % (stmt_base, ", ".join(markers))
 
         if self.driver.paramstyle in ('qmark', 'numeric', 'format'):
             #print "Format is", self.driver.paramstyle
@@ -256,6 +247,7 @@ class TestModuleDatatypes(AcuteBase):
         'Module supports DateFromTicks'
         d = self.driver.DateFromTicks(6798)
 
+    @requires('time_datatype')
     def test_TimeFromTicks(self):
         'Module supports TimeFromTicks'
         t = self.driver.TimeFromTicks(6798)
@@ -272,6 +264,7 @@ class TestModuleDatatypes(AcuteBase):
         # Can we assume this? API doesn't specify, but it seems implied
         # self.assertEqual(str(d1),str(d2))
 
+    @requires('time_datatype')
     def test_Time(self):
         'Module supports Time and TimeFromTicks'
         t1 = self.driver.Time(13,45,30)
@@ -331,6 +324,7 @@ class TestModuleDatatypes(AcuteBase):
             self.assertEqual(self.driver.Date(2007, 05, 01),
                          datetime.date(2007, 05, 01))
 
+    @requires('time_datatype')
     def test_time(self):
         "Module's time attribute is equivalent to datetime's time"
         #TODO: Perhaps dropping str() makes it an intermediate test?
