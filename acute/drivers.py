@@ -194,11 +194,11 @@ class ibm_db(DriverBase):
         if ci.port:
             args =[
                "DATABASE=%s;HOSTNAME=%s;PORT=%s;PROTOCOL=TCPIP;UID=%s;PWD=%s;"
-               % (ci.database, ci.hostname, ci.port, ci.username, ci.passwd)
+               % (ci.database, ci.hostname, ci.port, ci.username, ci.password)
             ]
         else:
             args = ["DATABASE=%s;UID=%s;PWD=%s;"
-                    % (ci.database, ci.name, ci.passwd)]
+                    % (ci.database, ci.name, ci.password)]
 
     def get_create_db_cmd(self, db_name):
         return "db2 create database %s" % db_name

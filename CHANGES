@@ -1,6 +1,14 @@
-Renamed features.py to drivers.py. SupportedFeatures now becomes DriverBase, and each driver subclasses from it.  Moved database create commands from config.py to drivers.py
+
+Renamed features.py to drivers.py. SupportedFeatures now becomes DriverBase, and each driver subclasses from it.  Moved database create commands from config.py to here. (r39)
+
+Moved convert_connect_args to drivers.py (from utils). (r40)
+
+Added a typemapping class to drivers.py, and switched test_dbapi to use it. (r41).
+
+Added rollback to tearDown of AcuteBase.  Fixed typo of 'password' in ibmdb config.  Cleaned up test_close's determination of what error should be thrown.  Use OrderedDict instead of dict in insert_BLOB_many. (r43)
 
 
+------------------------
 0.1dev, svn commit r36:  First public release of acute-dbapi.  Announced on db-sig:
   http://mail.python.org/pipermail/db-sig/2007-September/005220.html
 

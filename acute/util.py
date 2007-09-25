@@ -15,4 +15,31 @@ def import_module(driver_name):
             from pysqlite2 import dbapi2 as driver_module
     return driver_module
 
+class OrderedDict(dict): 
+    'A simplistic OrderedDict implementation.'
+    def __init__(self):
+        # No reason to accept kw parms, because they'd be a regular dict & their
+        #  order wouldn't be maintained.
+
+        # Save keys to a list so we can preserve order
+        self._keylist = []
+    
+    def __setitem__(self, key, value):
+        if not self.has_key(key):
+            self._keylist.append(key)
+        dict.__setitem__(self, key, value)
+
+    def keys(self):
+        return self._keylist
+
+    def values(self):
+        return [self.get(key) for key in self._keylist]
+
+    def items(self):
+        return [(key, self.get(key)) for key in self._keylist]
+
+    def __str__(self):
+        xx = ["%s: %s" % (repr(key), repr(value)) for (key, value) in self.items()]
+        rr = '{'+ ', '.join(xx) +'}'
+        return rr
 

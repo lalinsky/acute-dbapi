@@ -139,9 +139,14 @@ class AcuteBase(unittest.TestCase):
     driver = driver_module
 
     # Keyword arguments for connect
-    #TODO: Change to support URIs instead of this custom class.  
     connection_info = config.ConnectionInfo()
     connection_method = config.connection_method
+
+    def tearDown(self):
+        try:
+            self.con.rollback()
+        except:
+            pass
 
     def _connect(self, *args, **kwarg):
       con = connect(*args, **kwarg)
@@ -177,8 +182,6 @@ class AcuteBase(unittest.TestCase):
         stmt = "%s(%s)" % (stmt_base, ", ".join(markers))
 
         if self.driver.paramstyle in ('qmark', 'numeric', 'format'):
-            #print "Format is", self.driver.paramstyle
-            #print "Statement is", stmt
             cur.execute(stmt, data.values())
         elif self.driver.paramstyle in ('named', 'pyformat'):
             cur.execute(stmt, data)
@@ -378,24 +381,28 @@ class TestConnection(AcuteBase):
         con.close()
 
         qry = "select * from %sbooze" % table_prefix
-        #Replacing this statement with the next to eliminate executeDDL
-        #self.assertRaises(self.driver.Error,self.executeDDL1,cur)
+        
         if self.driver_name == 'pysqlite2':
-            self.assertRaises(self.driver.ProgrammingError,cs.execute(qry))
+            expected_error = self.driver.ProgrammingError
         elif self.driver_name in ('psycopg2', 'MySQLdb'):
-            # Something about the way this gets raised screws up assertRaises.
-            try:
-                cs.execute(qry)
-            except self.driver.InterfaceError:
-                pass
-            else:
-                raise(AssertionError, 'Driver did not raise interfacerror')
-            #self.assertRaises(self.driver.InterfaceError, cs.execute(qry))
+            expected_error = self.driver.InterfaceError
         else:
-            self.assertRaises(self.driver.Error,cs.execute(qry))
+            # There's no standard established here, so let unknown drivers get
+            #  get away with any sort of "Error"
+            expected_error = self.driver.Error
+        
+        # Something about the way this gets raise screws up assertRaisess for
+        #  pyscopg2, MySQLdb, and ibmdb.  (But strangely, not pysqlite2).
+        #self.assertRaises(expected_error, cs.execute(qry))
+        try:
+            cs.execute(qry)
+        except expected_error:
+            pass
+        else:
+           raise(AssertionError, 'Driver did not raise interfacerror')
 
-        self.assertRaises(self.driver.Error,con.commit)
-        self.assertRaises(self.driver.Error,con.close)
+        self.assertRaises(self.driver.Error, con.commit)
+        self.assertRaises(self.driver.Error, con.close)
 
     @requires('explicit_db_create')
     def test_bogusDB(self):
@@ -1150,8 +1157,10 @@ class TestCursor(AcuteBase):
         SIZE = 10
         self._createBLOBTable(con, cs)
         for i in range(SIZE):
-            data = dict(P1=self.driver.Binary(chr(i) * i),
-                        P2=self.driver.Binary(chr(i) * (1024-i)), )
+            data = OrderedDict()
+            data['P1'] = self.driver.Binary(chr(i) * i)
+            data['P2'] = self.driver.Binary(chr(i) * (1024-i))
+
             ps = self.driver.paramstyle
             if ps == 'qmark':
                 cs.execute("INSERT INTO %s VALUES (?, ?)" % self.tableName, data.values())
@@ -1179,6 +1188,7 @@ class TestTypesEmbedded(AcuteBase):
     def tearDown(self):
         self.con.rollback()
         drop_table(self.con, self.cs, self.table, ignore_errors=True)
+        self.con.commit()
         self.con.close()
 
     def _get_lastrow(self):

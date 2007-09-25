@@ -1,26 +1,5 @@
 import glob
-
-class OrderedDict(dict):
-    'A simplistic OrderedDict implementation.'
-    def __init__(self):
-        self._keylist = []
-
-    def __setitem__(self, key, value):
-        if not self.has_key(key):
-            self._keylist.append(key)
-        dict.__setitem__(self, key, value)
-
-    def keys(self):
-        return self._keylist
-
-    def items(self):
-        return [(key, self.get(key)) for key in self._keylist]
-
-    def __str__(self):
-        xx = ["%s: %s" % (repr(key), repr(value)) for (key, value) in self.items()]
-        rr = '{'+ ', '.join(xx) +'}'
-        return rr
-
+from util import OrderedDict
 
 def dump_testcase_reports():
     qualfiles = glob.glob("reports/*")
