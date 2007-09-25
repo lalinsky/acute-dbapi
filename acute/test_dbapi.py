@@ -16,6 +16,7 @@ import datetime
 import popen2
 import config
 import util
+from util import OrderedDict
 import decorators
 from decorators import requires, raises, supported_features
 import drivers
@@ -140,7 +141,6 @@ class AcuteBase(unittest.TestCase):
 
     # Keyword arguments for connect
     connection_info = config.ConnectionInfo()
-    connection_method = config.connection_method
 
     def tearDown(self):
         try:
