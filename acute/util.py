@@ -43,3 +43,22 @@ class OrderedDict(dict):
         rr = '{'+ ', '.join(xx) +'}'
         return rr
 
+def attr(value, doc = None, conformance_level = 0):
+    """Factory function to generate fancy attributes that can be annotated"""
+    base = type(value)
+    if base == bool:
+        # bool class can't be used as a base, so we make one that can.
+        class MyBool(int):
+            def __str__(self):
+                return str(bool(self))
+            __repr__ = __str__ 
+        base = MyBool
+
+    class FancyAttr(base): 
+        pass 
+
+    fa = FancyAttr(value)
+    fa.__doc__ = doc
+    fa.conformance_level = conformance_level
+    return fa
+

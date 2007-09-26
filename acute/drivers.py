@@ -3,12 +3,18 @@
 # See the README for details on how this module works (if it's not obvious).
 
 # NOTES: 
-# 1) When subclassing DriverBase, be sure to match the name of the driver 
+# When subclassing DriverBase, be sure to match the name of the driver 
 #    that will be imported, including case.
-# 2) The docstrings for each class attribute are stored in a seperate 
-#    attribute that follows the naming convention "_ATTRIBUTE__doc__".  
-#    This allows the introspection mechanism of report.py to work.
 
+from util import attr
+
+class ConformanceLevels(object):
+    Basic = 0
+    Optional = 1
+    Intermediate = 2
+    Advanced = 3
+cl = ConformanceLevels()
+    
 class TypeMap(object):
     "Map types to those needed by the database."
     char = 'char'
@@ -37,96 +43,103 @@ class DriverBase(object):
         """
         raise NotImplementedError
 
-    transactional_ddl = True
-    _transactional_ddl__doc__ = "DDL statements are transactional (need commit)"
+    transactional_ddl = attr(True, 
+            doc = "DDL statements are transactional (need commit)")
 
-    connection_level_exceptions = True
-    _connection_level_exceptions__doc__ = (
-        "Exceptions are defined at the connection level (optional)")
+    connection_level_exceptions = attr(True,
+            doc = "Exceptions are defined at the connection level.",
+            conformance_level = cl.Optional)
 
-    rollback_defined = True
-    _rollback_defined__doc__ = "Driver defines rollback"
+    rollback_defined = attr(True, 
+            doc = "Driver defines rollback",
+            conformance_level = cl.Intermediate)
 
-    call_proc = True
-    _call_proc__doc__ = "Database supports stored procedures"
+    call_proc = attr(True, 
+            doc = "Database supports stored procedures",
+            conformance_level = cl.Advanced)
 
-    explicit_db_create = True
-    _explicit_db_create__doc__ = (
-        "Databases are created explicitly (here for SQLite)")
+    explicit_db_create = attr(True, 
+            doc = "Databases are created explicitly (here for SQLite)")
 
-    authentication = True
-    _authentication__doc__ = "Database requires authentication (for SQLite)"
+    authentication = attr(True, 
+            doc = "Database requires authentication (for SQLite)")
     
-    inoperable_closed_connections = True
-    _inoperable_closed_connections__doc__ = (
-        "Closed connections are no longer usable")
+    inoperable_closed_connections = attr(True,
+            doc = "Closed connections are no longer usable",
+            conformance_level = cl.Basic)
     
-    sane_empty_fetch = True
-    _sane_empty_fetch__doc__ = "Fetch should fail if no query is issued"
+    sane_empty_fetch = attr(True,
+            doc = "Fetch should fail if no query is issued",
+            conformance_level = cl.Basic)
 
-    sane_rowcount = True
-    _sane_rowcount__doc__ = "Rowcount should be set correctly by fetchmany"
+    sane_rowcount = attr(True,
+            doc = "Rowcount should be set correctly by fetchmany",
+            conformance_level = cl.Intermediate)
 
-    rowcount_reset_empty_fetch = True
-    _rowcount_reset_empty_fetch__doc__ = (
-        "Rowcount is reset after an empty fetch")
+    rowcount_reset_empty_fetch = attr(True,
+            doc = "Rowcount is reset after an empty fetch",
+            conformance_level = cl.Basic)
 
-    driver_level_datatypes = True
-    _driver_level_datatypes__doc__ = (
-        "Available datatypes are defined at the driver level")
+    driver_level_datatypes = attr(True,
+            doc = "Available datatypes are defined at the driver level",
+            conformance_level = cl.Optional)
 
-    driver_level_datatypes_binary = True
-    _driver_level_datatypes_binary__doc__ = (
-        "The Binary datatype is defined at the driver level")
+    driver_level_datatypes_binary = attr(True,
+            doc = "The Binary datatype is defined at the driver level",
+            conformance_level = cl.Optional)
 
-    time_datatype = True
-    _time_datatype__doc__ = "Driver supports the time datatype (optional)"
+    time_datatype = attr(True,
+            doc = "Driver supports the time datatype (optional)",
+            conformance_level = cl.Optional)
 
-    time_datatype_time = True
-    _time_datatype_time__doc__ = (
-        "The driver's time datatype supports python time values")
+    time_datatype_time = attr(True,
+            doc = "The driver's time datatype supports python time values",
+            conformance_level = cl.Intermediate)
 
-    time_datatype_subsecond = True
-    _time_datatype_subsecond__doc__ = (
-        "The time datatype supports subsecond times")
+    time_datatype_subsecond = attr(True,
+            doc = "The time datatype supports subsecond times")
 
-    timestamp_datatype_subsecond = True
-    _timestamp_datatype_subsecond__doc__ = (
-        "The timestamp datatype supports subsecond times")
+    timestamp_datatype_subsecond = attr(True,
+            doc = "The timestamp datatype supports subsecond times")
 
-    sane_timestamp = True
-    _sane_timestamp__doc__ = "Timestamp returns datetime compatible timestamps"
+    sane_timestamp = attr(True,
+            doc = "Timestamp returns datetime compatible timestamps",
+            conformance_level = cl.Intermediate)
 
-    setoutputsize = True
-    _setoutputsize__doc__ = "Driver supports setoutputsize"
+    setoutputsize = attr(True,
+            doc = "Driver supports setoutputsize",
+            conformance_level = cl.Optional)
     
-    stored_procedure_language = "SQL:2003"
-    _stored_procedure_language__doc__ =  (
-        "Stored procedure language can be one of: " 
-        "Transact-SQL (Microsoft SQL Server), PL/SQL (Oracle), SQL/PL (DB2), "
-        "PL/pgSQL (PostgreSQL), SQL:2003 (Anything standards compliant (MySQL))")
+    stored_procedure_language = attr("SQL:2003",
+            doc = "Stored procedure language can be one of: " 
+                  "Transact-SQL (Microsoft SQL Server), PL/SQL (Oracle), SQL/PL (DB2), "
+                  "PL/pgSQL (PostgreSQL), SQL:2003 (Anything standards compliant (MySQL))")
 
-    callproc = True
-    _callproc__doc__ = "Database support stored procedures (Optional)"
+    callproc = attr(True,
+            doc = "Database support stored procedures (Optional)",
+            conformance_level = cl.Optional)
 
-    lower_func = 'lower'
-    _lower_func__doc__ = (
-        "The name of the function used to convert a string to lowercase")
+    lower_func = attr('lower',
+            doc = "The name of the function used to convert a string to lowercase")
 
-    dbapi_level = "2.0"
-    _dbapi_level__doc__ = "The DB-API level that the driver supports"
+    dbapi_level = attr("2.0",
+            doc = "The DB-API level that the driver supports")
 
-    scrollable_cursors = False
-    _scrollable_cursors__doc__ = "Driver supports scrollable cursors"
+    scrollable_cursors = attr(False,
+            doc = "Driver supports scrollable cursors",
+            conformance_level = cl.Advanced)
 
-    blob_binary = True
-    _blob_binary__doc__ = "BLOBs can be created from the driver's Binary type"
+    blob_binary = attr(True,
+            doc = "BLOBs can be created from the driver's Binary type", 
+            conformance_level = cl.Basic)
 
-    smart_lob_open = False
-    _smart_lob_open__doc__ = "LOBs can be read from a file handle"
+    smart_lob_open = attr(False,
+            doc = "LOBs can be read from a file handle",
+            conformance_level = cl.Advanced)
 
-    lastrowid = True
-    _lastrowid__doc__ = "Supports lastrowid"
+    lastrowid = attr(True,
+            doc = "Supports lastrowid",
+            conformance_level = cl.Basic)
 
 
 class pysqlite2(DriverBase):

@@ -44,17 +44,18 @@ def dump_supported_features():
     import drivers
     features = OrderedDict()
     for nbr, driver_features in enumerate([drivers.DriverBase, drivers.pysqlite2, 
-               drivers.MySQLdb, drivers.psycopg2, drivers.ibm_db]):
+               drivers.MySQLdb, drivers.psycopg2, drivers.ibm_db, 
+               drivers.cx_Oracle, drivers.ceODBC]):
         for feature in dir(driver_features):
             if (feature[:1] == '_' or 
+                feature == 'typemap' or 
                 hasattr(getattr(driver_features, feature), '__call__')):
                 continue   # Skip private attributes & methods
 
             value = getattr(driver_features, feature)
             (doc, supports) = features.get(feature, ['', []])
             if not doc:
-               doc_attr = '_' + feature + '__doc__'
-               doc = getattr(driver_features, doc_attr)
+                doc = getattr(value, '__doc__')
             supports.append(value)
 
             features[feature] = (doc, supports)
@@ -70,7 +71,8 @@ Covers features that are universal to all DB-API implementations ; features that
 to a particular driver are not covered. 
     """
     #Output the table headers
-    print "|| Feature || Feature Description || Default Value || pysqlite2 || MySQLdb || psycopg2 ||"
+    print ("|| Feature || Feature Description || Default Value || pysqlite2 || MySQLdb "
+           "|| psycopg2 || ibmdb || ceODBC || cx_Oracle")
 
     #Output the table details
     for (feature, (doc, supports)) in features.items():
