@@ -15,6 +15,7 @@ If the test somehow succeeded, it would be an 'UnexpectedSuccess.'
 """
 
 import unittest, re, sys, os, operator
+from util import find_public_atrs
 
 class Unsupported(Exception):
     pass
@@ -28,8 +29,11 @@ class DidNotRaise(Exception):
 class SF(object):
     typical_feature = True
 supported_features = SF()
-def set_supported_features(supported_features):
-    supported_features = supported_features
+def register_supported_features(driver_features, dbms_features):
+    global supported_features
+    supported_features = driver_features
+    for feature in find_public_atrs(dbms_features):
+        setattr(supported_features, feature, getattr(dbms_features, feature))
 
 
 def requires(*requirements):

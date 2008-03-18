@@ -62,3 +62,10 @@ def attr(value, doc = None, conformance_level = 0):
     fa.conformance_level = conformance_level
     return fa
 
+def find_public_atrs(obj):
+    """Find the public attributes of an object.
+    private attributes have a leading underscore ("_")
+    """
+    atrs = dir(obj)
+    return [atr for atr in atrs if not atr.startswith('_')]
+

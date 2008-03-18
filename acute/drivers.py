@@ -5,7 +5,7 @@
 # NOTES: 
 # When subclassing DriverBase, be sure to match the name of the driver 
 #    that will be imported, including case.
-
+import databases
 from util import attr
 
 class ConformanceLevels(object):
@@ -15,17 +15,6 @@ class ConformanceLevels(object):
     Advanced = 3
 cl = ConformanceLevels()
     
-class TypeMap(object):
-    "Map types to those needed by the database."
-    char = 'char'
-    string = 'varchar'
-    integer = 'integer'
-    clob = 'clob'
-    blob = 'blob'
-    date = 'date'
-    time = 'time'
-    timestamp = 'timestamp'
-    serial = 'serial'
     
 class DriverBase(object):
     """Describes the features that are known to vary between drivers.
@@ -37,14 +26,10 @@ class DriverBase(object):
         """
         raise NotImplementedError
 
-    def get_create_db_cmd(self, db_name):
-        """ The command used to create a database. Return None when dbs are
-        created implicitly.
-        """
-        raise NotImplementedError
-
-    transactional_ddl = attr(True, 
-            doc = "DDL statements are transactional (need commit)")
+    dbms = attr("TDB",
+        doc = "The databases.DatabaseBase class that defines the"
+            " dbms' capabilities."
+        )
 
     connection_level_exceptions = attr(True,
             doc = "Exceptions are defined at the connection level.",
@@ -54,16 +39,6 @@ class DriverBase(object):
             doc = "Driver defines rollback",
             conformance_level = cl.Intermediate)
 
-    call_proc = attr(True, 
-            doc = "Database supports stored procedures",
-            conformance_level = cl.Advanced)
-
-    explicit_db_create = attr(True, 
-            doc = "Databases are created explicitly (here for SQLite)")
-
-    authentication = attr(True, 
-            doc = "Database requires authentication (for SQLite)")
-    
     inoperable_closed_connections = attr(True,
             doc = "Closed connections are no longer usable",
             conformance_level = cl.Basic)
@@ -88,19 +63,9 @@ class DriverBase(object):
             doc = "The Binary datatype is defined at the driver level",
             conformance_level = cl.Optional)
 
-    time_datatype = attr(True,
-            doc = "Driver supports the time datatype (optional)",
-            conformance_level = cl.Optional)
-
     time_datatype_time = attr(True,
             doc = "The driver's time datatype supports python time values",
             conformance_level = cl.Intermediate)
-
-    time_datatype_subsecond = attr(True,
-            doc = "The time datatype supports subsecond times")
-
-    timestamp_datatype_subsecond = attr(True,
-            doc = "The timestamp datatype supports subsecond times")
 
     sane_timestamp = attr(True,
             doc = "Timestamp returns datetime compatible timestamps",
@@ -110,24 +75,8 @@ class DriverBase(object):
             doc = "Driver supports setoutputsize",
             conformance_level = cl.Optional)
     
-    stored_procedure_language = attr("SQL:2003",
-            doc = "Stored procedure language can be one of: " 
-                  "Transact-SQL (Microsoft SQL Server), PL/SQL (Oracle), SQL/PL (DB2), "
-                  "PL/pgSQL (PostgreSQL), SQL:2003 (Anything standards compliant (MySQL))")
-
-    callproc = attr(True,
-            doc = "Database support stored procedures (Optional)",
-            conformance_level = cl.Optional)
-
-    lower_func = attr('lower',
-            doc = "The name of the function used to convert a string to lowercase")
-
     dbapi_level = attr("2.0",
             doc = "The DB-API level that the driver supports")
-
-    scrollable_cursors = attr(False,
-            doc = "Driver supports scrollable cursors",
-            conformance_level = cl.Advanced)
 
     blob_binary = attr(True,
             doc = "BLOBs can be created from the driver's Binary type", 
@@ -147,21 +96,15 @@ class pysqlite2(DriverBase):
     def convert_connect_args(self, ConnectionInfo):
         return [ConnectionInfo.database], dict()
 
-    def get_create_db_cmd(self, db_name):
-        return None
+    dbms = databases.sqlite
 
-    explicit_db_create = False
     inoperable_closed_connections = False
-    authentication = False
     sane_empty_fetch = False
     driver_level_datatypes = False
-    time_datatype = True
-    transactional_ddl = False
     sane_rowcount = False
     sane_empty_fetch = False
     time_datatype_time = False
 
-    typemap = TypeMap()
 
 class psycopg2(DriverBase):
     def convert_connect_args(self, ci):
@@ -169,15 +112,10 @@ class psycopg2(DriverBase):
                    (ci.hostname, ci.database, ci.username, ci.password)}
         return [], kwargs
 
-    def get_create_db_cmd(self, db_name):
-        return "psql -c 'create database %s'" % db_name
+    dbms = databases.postgres
 
     rowcount_reset_empty_fetch = False
-    stored_procedure_language = "PL/pgSQL"
 
-    typemap = TypeMap()
-    typemap.clob = 'text'
-    typemap.blob = 'bytea'
 
 class MySQLdb(DriverBase):
     def convert_connect_args(self, ci):
@@ -189,18 +127,13 @@ class MySQLdb(DriverBase):
         )
         return [], kwargs
 
-    def get_create_db_cmd(self, db_name):
-        raise NotImplementedError
+    dbms = databases.mysql 
 
-    time_datatype_subsecond = True
-    timestamp_datatype_subsecond = False
     sane_timestamp = False
     sane_empty_fetch = False
     setoutputsize = False
     rowcount_reset_empty_fetch = False
   
-    typemap = TypeMap()
-    typemap.clob = 'text'
 
 class ibm_db(DriverBase):
     def convert_connect_args(self, ci):
@@ -213,37 +146,19 @@ class ibm_db(DriverBase):
             args = ["DATABASE=%s;UID=%s;PWD=%s;"
                     % (ci.database, ci.name, ci.password)]
 
-    def get_create_db_cmd(self, db_name):
-        return "db2 create database %s" % db_name
-
-    typemap = TypeMap()
-    typemap.serial = "int generated by default as identity"
+    dbms = databases.db2
 
 class ceODBC(DriverBase):
-    time_datatype = False
-    time_datatype_time = False
-    time_datatype_subsecond = False
     connection_level_exceptions = False
-    typemap = TypeMap()
-    typemap.date = "datetime"
-    typemap.time = "integer"
-    typemap.serial = "integer"
-    typemap.clob = "text"
-    typemap.blob = "image"
 
     def convert_connect_args(self, ci):
         return [ci.database], {}
 
 class cx_Oracle(DriverBase):
-    time_datatype = False
-    time_datatype_time = False
-    time_datatype_subsecond = False
     connection_level_exceptions = False
-    typemap = TypeMap()
-    typemap.string = "varchar2"
-    typemap.time = "number"
-    typemap.serial = "number"
 
     def convert_connect_args(self, ci):
         return [ci.username, ci.password, ci.database], {}
+
+    dbms = databases.oracle
 

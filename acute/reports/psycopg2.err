@@ -71,6 +71,6 @@ Call a stored procedure (experimental) ... (Skipped) ok
 Stored procedure calls return result sets ... (Unsupported) ok
 
 ----------------------------------------------------------------------
-Ran 71 tests in 5.395s
+Ran 71 tests in 5.554s
 
 OK

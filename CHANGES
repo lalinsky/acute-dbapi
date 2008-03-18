@@ -7,6 +7,10 @@ Added a typemapping class to drivers.py, and switched test_dbapi to use it. (r41
 
 Added rollback to tearDown of AcuteBase.  Fixed typo of 'password' in ibmdb config.  Cleaned up test_close's determination of what error should be thrown.  Use OrderedDict instead of dict in insert_BLOB_many. (r43)
 
+Remove unneeded connection_method from config (this is is drivers.py now).  Also fixed import of OrderedDict in test_dbapi.py.  (r44)
+
+Added databases.py, and moved dbms-specfic code from drivers.py to it.  This is prep work for supporing generic drivers that work with more than 1 dbms (ie, ODBC, ibm_db). (r46)
+
 
 ------------------------
 0.1dev, svn commit r36:  First public release of acute-dbapi.  Announced on db-sig:
