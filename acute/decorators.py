@@ -37,7 +37,9 @@ def register_supported_features(driver_features, dbms_features):
 
 
 def requires(*requirements):
-    "Declare a test as requiring a feature or list of features in order to succeed."
+    """Declare a test as requiring a feature (or list of features)
+    in order to succeed.
+    """
     global required_features
     # Determine if the test is expected to pass
     requirements_met = True

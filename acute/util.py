@@ -39,7 +39,8 @@ class OrderedDict(dict):
         return [(key, self.get(key)) for key in self._keylist]
 
     def __str__(self):
-        xx = ["%s: %s" % (repr(key), repr(value)) for (key, value) in self.items()]
+        xx = ["%s: %s" % (repr(key), repr(value)) for (key, value) 
+                  in self.items()]
         rr = '{'+ ', '.join(xx) +'}'
         return rr
 

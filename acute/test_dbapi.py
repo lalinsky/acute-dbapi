@@ -3,7 +3,7 @@
 Only a few 'optional extensions' are being tested at this point.
 '''
 #TODO: Use assertRaises from ActiveState scripts
-#TODO: Fix this all the tests that require 'amiracle'. (These tests are skipped).
+#TODO: Fix this all the tests that require 'amiracle' (These tests are skipped).
 #TODO: Create a test that uses primary keys.  Test errhandling with it.
 
 __rcs_id__  = '$Id$'
@@ -64,6 +64,10 @@ def create_table(con, cs, statement):
       con.commit()
 
 def drop_table(con, cs, table, ignore_errors=False):
+    """Given a connection & cursor, drop a table.
+    Optionally, ignore errors that occurred in the process.
+    Commit changes when done.
+    """
     try:
         cs.execute('drop table %s' % table)
     except:
@@ -131,7 +135,9 @@ def connect_plus_cursor(connection_info=None, connection_method='default'):
 
 
 class AcuteBase(unittest.TestCase):
-    """ Base class for the tests. Defines basic setup, Teardown, _connect methods. """
+    """ Base class for the tests. 
+    Defines basic setup, Teardown, _connect methods.
+    """
 
     # The name of the driver & the driver itself (as imported)
     driver_name = driver_name
@@ -196,19 +202,25 @@ class TestModule(AcuteBase):
 
     def test_apilevel(self):
         "Driver defines apilevel"
-        self.failUnless(hasattr(self.driver, "apilevel"), "Driver must define apilevel")
-        self.assertEqual(self.driver.apilevel, driver_meta.dbapi_level)
+        self.failUnless(hasattr(self.driver, "apilevel"), 
+            "Driver must define apilevel")
+        self.assertEqual(self.driver.apilevel, driver_meta.dbapi_level,
+            "Driver supports different version of DBAPI than the testsuite")
 
     def test_threadsafety(self):
         "Driver defines threadsafety"
-        self.failUnless(hasattr(self.driver, "threadsafety"), "Driver must define threadsafety")
-        self.failUnless(self.driver.threadsafety in (0,1,2,3), "Threadsafety not in allowed values")
+        self.failUnless(hasattr(self.driver, "threadsafety"), 
+            "Driver must define threadsafety")
+        self.failUnless(self.driver.threadsafety in (0,1,2,3), 
+            "Threadsafety not in allowed values")
 
     def test_globalparamstyle(self):
         "Driver defines paramstyle"
-        self.failUnless(hasattr(self.driver, "paramstyle"), "Driver must define paramstyle")
+        self.failUnless(hasattr(self.driver, "paramstyle"), 
+            "Driver must define paramstyle")
         paramstyles = ('qmark','numeric','named','format','pyformat')
-        self.failUnless(self.driver.paramstyle in paramstyles, "Paramstyle not in allowed values")  
+        self.failUnless(self.driver.paramstyle in paramstyles, 
+             "Paramstyle not in allowed values")  
 
     def test_Exceptions(self):
         """Required exceptions are in the defined heirachy."""
@@ -239,8 +251,8 @@ class TestModule(AcuteBase):
 #TODO: pyscopg2 fails these because it's returning a string. Move to 'intermediate'?
 #TODO:  -- Date(2007, 05, 01).adapted works though
 class TestModuleDatatypes(AcuteBase):
-    """ Test module level datatypes.  TestTypesEmbedded below tests their use in
-    SQL statements.
+    """ Test module level datatypes.  
+    The TestTypesEmbedded class below tests their use in SQL statements.
     """
     driver = driver_module
     
@@ -341,11 +353,13 @@ class TestModuleDatatypes(AcuteBase):
     def test_timestamp(self):
         "Module's Timestamp attribute is equivalent to datetime's datetime"
         if self.driver_name == 'psycopg2':
-            self.assertEqual(str(self.driver.Timestamp(2007, 05, 01, 11, 03, 13).adapted),
-                        str(datetime.datetime(2007, 05, 01, 11, 03, 13)))
+            self.assertEqual(
+                str(self.driver.Timestamp(2007, 05, 01, 11, 03, 13).adapted),
+                str(datetime.datetime(2007, 05, 01, 11, 03, 13)))
         else:
-            self.assertEqual(self.driver.Timestamp(2007, 05, 01, 11, 03, 13),
-                        datetime.datetime(2007, 05, 01, 11, 03, 13))
+            self.assertEqual(
+                self.driver.Timestamp(2007, 05, 01, 11, 03, 13),
+                datetime.datetime(2007, 05, 01, 11, 03, 13))
 
     #TODO: Put this back in
     #def test_binary(self):
@@ -370,7 +384,7 @@ class TestConnection(AcuteBase):
         """Can't close a closed connection """
         con = connect()
         con.close()
-        self.assertRaises(self.driver.Error,con.close)
+        self.assertRaises(self.driver.Error, con.close)
         
     @requires('inoperable_closed_connections')
     def test_close(self):
@@ -379,7 +393,7 @@ class TestConnection(AcuteBase):
         con.close()
 
         qry = "select * from %sbooze" % table_prefix
-        
+ 
         if self.driver_name == 'pysqlite2':
             expected_error = self.driver.ProgrammingError
         elif self.driver_name in ('psycopg2', 'MySQLdb'):
@@ -454,7 +468,9 @@ class TestConnection(AcuteBase):
 
     @requires('connection_level_exceptions')
     def test_ExceptionsAsConnectionAttributes(self):
-        """ Connection objects should include the exceptions as attributes (optional)"""
+        """ Connection objects should include the exceptions
+        as attributes (optional)
+        """
         con = self._connect()
         drv = self.driver
         self.failUnless(con.Warning is drv.Warning)
@@ -491,7 +507,7 @@ class TestConnection(AcuteBase):
 
 class TestCursor(AcuteBase):
     #TODO: Test lastrowid after bogus operations like ddl, or insert on table w/out rowid
-    #TODO: Test not null violations
+    #TODO: Test not null violations, esp. against PKs. (pysqlite was failing)
     def test_cursor(self):
         """ Connections must have cursor method """
         con = self._connect()
@@ -514,7 +530,6 @@ class TestCursor(AcuteBase):
         self.failUnlessEqual(self.cs.lastrowid, 1)
         self.failUnlessEqual(self.cs.rowcount, 1)
         
-    #TODO: Fix this test.
     @requires('amiracle')
     def test_insert_None(self):
         "Insert a row with Null columns"
@@ -523,14 +538,12 @@ class TestCursor(AcuteBase):
         id_value = self.cs.lastrowid()
         self.assertEqual(1, id_value)
 
-    #TODO: Fix this test
     @requires('amiracle')
     def test_insert_type_mismatch(self):
          "Insert using the wrong datatype raises TypeError"
          self._createTable()
          self.assertRaises(TypeError, self._insertData, (1.0, None))
 
-    #TODO: Fix this test
     @requires('amiracle')
     def test_insert_truncation(self):
          "Insert that overflows column size raises ProgrammingError"
@@ -538,14 +551,12 @@ class TestCursor(AcuteBase):
          self.assertRaises(dbapi.ProgrammingError,
                            self._insertData, (1, 'XXXX'))
 
-    #TODO: Fix this test.
     @requires('amiracle')
     def test_insert_parm_mismatch(self):
         "Inserting wrong number of columns raises ProgrammingError"
         self._createTable()
         self.assertRaises(dbapi.ProgrammingError, self._insertData, (1, ))
 
-    ##TODO: Fix this test
     ##@requires('callproc') #, 'amiracle')
     #def test_callproc_xxx(self):
     #    """cs.callproc() - IN, OUT, INOUT parameters"""
@@ -565,7 +576,6 @@ class TestCursor(AcuteBase):
     #    self.assertEqual( ('XXXXX', 'YYY', 3), r )
     #
     #@requires('amiracle')
-    ##TODO: Fix this test
     #def test_callproc_xxx_resultsets(self):
     #    """cs.callproc() - w/ Result set"""
     #    con, cs = connect_plus_cursor()
@@ -604,11 +614,10 @@ class TestCursor(AcuteBase):
     #    self.assertEqual(len(rows), SIZE)
 
     def test_arraysize(self):
-        """ Cursor must define arraysize """
+        "Cursor must define arraysize"
         con, cur = connect_plus_cursor()
         cur.arraysize
 
-    #TODO: Flesh this out, break into 2.  First test that attribute defined, then test function
     def test_setinputsizes_basic(self):
         "Insert works with cursor.setinputsize"
         con, cur = connect_plus_cursor()
@@ -618,7 +627,6 @@ class TestCursor(AcuteBase):
         finally:
             con.close()
 
-    #TODO: Flesh this out, break into 2.  First test that attribute defined, then test function
     @requires('setoutputsize')
     def test_setoutputsize_basic(self):
         "Insert works with cursor.setoutputsize"
@@ -716,7 +724,8 @@ class TestCursor(AcuteBase):
             if driver_meta.sane_empty_fetch:
                 self.failUnless(cur.rowcount in (-1,1),
                     'cursor.rowcount should == number of rows returned, or '
-                    'set to -1 after executing a select statement, not %s.' % cur.rowcount
+                    'set to -1 after executing a select statement, not %s.'
+                    % cur.rowcount
                     )
             create_table(con, cur, ddl2)
             #TODO: Check this against PEP 249.  Original code claimed -1 was correct answer
@@ -730,7 +739,6 @@ class TestCursor(AcuteBase):
 
     def test_rowcount_basic(self):
         "Rowcount should be 1 after singleton insert"
-        #self.executeDDL1(cur)
         con, cur = connect_plus_cursor()
         cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
             table_prefix
@@ -773,7 +781,8 @@ class TestCursor(AcuteBase):
         create_table(con, cur, ddl1)
         
         data = [ (1, 'a'), (2, 'bb'), (3, 'ccc') ]
-        self.cs.executemany("INSERT INTO %s VALUES (?, ?)" % self.tableName, data)
+        self.cs.executemany("INSERT INTO %s VALUES (?, ?)" % 
+            self.tableName, data)
         cur.set_scrollable(1)
         self.cs.execute("SELECT * FROM %s" % self.tableName)
         rows = self.cs.fetchmany( len(data) )
@@ -796,7 +805,8 @@ class TestCursor(AcuteBase):
         # create_table(con, cur, ddl1)
 
         for s in self.beer_samples:
-            cur.execute("insert into %sbooze values ('%s')" % (table_prefix,s))
+            cur.execute("insert into %sbooze values ('%s')" % 
+                (table_prefix,s))
         #commit?
 
     def test_executemany(self):
@@ -809,31 +819,20 @@ class TestCursor(AcuteBase):
             margs = [ {'beer': "Cooper's"}, {'beer': "Boag's"} ]
             if self.driver.paramstyle == 'qmark':
                 cur.executemany(
-                    'insert into %sbooze values (?)' % table_prefix,
-                    largs
-                    )
+                    'insert into %sbooze values (?)' % table_prefix, largs)
             elif self.driver.paramstyle == 'numeric':
                 cur.executemany(
-                    'insert into %sbooze values (:1)' % table_prefix,
-                    largs
-                    )
+                    'insert into %sbooze values (:1)' % table_prefix, largs)
             elif self.driver.paramstyle == 'named':
                 cur.executemany(
-                    'insert into %sbooze values (:beer)' % table_prefix,
-                    margs
-                    )
+                    'insert into %sbooze values (:beer)' % table_prefix, margs)
             elif self.driver.paramstyle == 'format':
                 cur.executemany(
-                    'insert into %sbooze values (%%s)' % table_prefix,
-                    largs
-                    )
+                    'insert into %sbooze values (%%s)' % table_prefix, largs)
             elif self.driver.paramstyle == 'pyformat':
                 cur.executemany(
-                    'insert into %sbooze values (%%(beer)s)' % (
-                        table_prefix
-                        ),
-                    margs
-                    )
+                    'insert into %sbooze values (%%(beer)s)' % (table_prefix),
+                    margs)
             else:
                 self.fail('Unknown paramstyle')
             #TODO: Move this to it's own test.  psycopg2 doesn't support
@@ -918,22 +917,21 @@ class TestCursor(AcuteBase):
             #TODO: Move this into it's own test
             if driver_meta.rowcount_reset_empty_fetch:
                 self.failUnless(cur.rowcount in (-1,0),
-                                "rowcount should be reset after empty fetch")
+                    "rowcount should be reset after empty fetch")
 
             # Same as above, using cursor.arraysize
             cur.arraysize=4
             cur.execute('select name from %sbooze' % table_prefix)
             r = cur.fetchmany() # Should get 4 rows
             self.assertEqual(len(r),4,
-                'cursor.arraysize not being honoured by fetchmany'
-                )
+                'cursor.arraysize not being honoured by fetchmany')
             r = cur.fetchmany() # Should get 2 more
             self.assertEqual(len(r),2)
             r = cur.fetchmany() # Should be an empty sequence
             self.assertEqual(len(r),0)
             if driver_meta.rowcount_reset_empty_fetch:
                 self.failUnless(cur.rowcount in (-1,0),
-                                "rowcount should be reset after empty fetch")
+                    "rowcount should be reset after empty fetch")
 
             cur.arraysize=6
             cur.execute('select name from %sbooze' % table_prefix)
@@ -959,7 +957,7 @@ class TestCursor(AcuteBase):
                 )
             if driver_meta.rowcount_reset_empty_fetch:
                 self.failUnless(cur.rowcount in (-1,0),
-                                "rowcount should be reset after empty fetch")
+                    "rowcount should be reset after empty fetch")
 
             create_table(con, cur, ddl2)
             cur.execute('select name from %sbarflys' % table_prefix)
@@ -969,7 +967,7 @@ class TestCursor(AcuteBase):
                 'query retrieved no rows'
                 )
             self.failUnless(cur.rowcount in (-1,0),
-                            "rowcount should be reset after empty fetch")
+                "rowcount should be reset after empty fetch")
 
         finally:
             con.close()
@@ -1036,8 +1034,7 @@ class TestCursor(AcuteBase):
   
         # Insert
         cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
-            table_prefix
-            ))
+            table_prefix))
         self.assertRaises(self.driver.Error,cur.fetchone)
 
     def test_mixedfetch(self):
@@ -1129,7 +1126,8 @@ class TestCursor(AcuteBase):
         except:
           con.rollback()
         bt = dbms_meta.typemap.blob
-        cs.execute("CREATE TABLE %s ( P1 %s, P2 %s )" % (self.tableName, bt, bt))
+        cs.execute("CREATE TABLE %s ( P1 %s, P2 %s )" % 
+            (self.tableName, bt, bt))
 
     @requires('smart_lob_open')
     def test_blob_smart_open(self):
@@ -1161,17 +1159,20 @@ class TestCursor(AcuteBase):
 
             ps = self.driver.paramstyle
             if ps == 'qmark':
-                cs.execute("INSERT INTO %s VALUES (?, ?)" % self.tableName, data.values())
+                cs.execute("INSERT INTO %s VALUES (?, ?)" % self.tableName,
+                    data.values())
             elif ps == 'numeric':
-                cs.execute("INSERT INTO %s VALUES (:1, :2)" % self.tableName, data.values())
+                cs.execute("INSERT INTO %s VALUES (:1, :2)" % self.tableName, 
+                    data.values())
             elif self.driver.paramstyle == 'named':
-                cs.execute("INSERT INTO %s VALUES (:%s, :%s)" % self.tableName, data)
+                cs.execute("INSERT INTO %s VALUES (:%s, :%s)" % self.tableName,
+                    data)
             elif ps == 'format':
                 cs.execute("INSERT INTO %s VALUES (%%s, %%s)" %  
-                               self.tableName, data.values())
+                    self.tableName, data.values())
             elif ps == 'pyformat':
                 cs.execute("INSERT INTO %s VALUES ((%%(P1)s), (%%(P2)s))" %
-                       self.tableName, data)
+                    self.tableName, data)
         cs.execute("SELECT * FROM %s" % self.tableName)
         rows = cs.fetchmany(SIZE)
 
@@ -1192,14 +1193,17 @@ class TestTypesEmbedded(AcuteBase):
     def _get_lastrow(self):
         """Return the last row inserted by this process"""
         id_value = self.cs.lastrowid
-        self._insert(self.con, self.cs, table=self.table, data=dict(int1=id_value), stmt_type='select')
+        self._insert(self.con, self.cs, table=self.table, 
+            data=dict(int1=id_value), stmt_type='select')
         #TODO: Was the ugly hack to insert worth it?  Or should I just not use parammarker here?
         #self.cs.execute('select * from %s where int1 = ?' % self.table, id_value)
         row = self.cs.fetchone()
         return row
 
     def _get_row(self, table):
-        """Return a row from a table.  If there's more than one row, it's an error """
+        """Return a row from a table.  
+        If there's more than one row, it's an error.
+        """
         self.cs.execute("select * from %s" % table)
         row = self.cs.fetchall()
         cnt = len(row)
@@ -1227,8 +1231,10 @@ class TestTypesEmbedded(AcuteBase):
     def test_timestamp_insert_string(self):
         '''Insert timestamp with subsecond precision using strings'''
         timestamp1 = '2007-05-01 16:00:57.180210'
-        timestamp1_datetime = datetime.datetime(2007, 05, 01, 16, 00, 57, 180210)
-        self._insert(self.con, self.cs, table=self.table, data=dict(timestamp1=timestamp1))
+        timestamp1_datetime = datetime.datetime(
+            2007, 05, 01, 16, 00, 57, 180210)
+        self._insert(self.con, self.cs, table=self.table, 
+            data=dict(timestamp1=timestamp1))
         #print "RowID is ", self.cs.lastrowid, "."
         self.assertEqual(str(self._get_row(self.table)[3]),timestamp1)
         #self.assertEqual(self._get_lastrow()[3],timestamp1_datetime)
@@ -1237,8 +1243,10 @@ class TestTypesEmbedded(AcuteBase):
         '''Insert timestamp using datetime's datetime'''
         timestamp1 = datetime.datetime(2007, 05, 01, 11, 03, 13)
         timestamp1_string = '2007-05-01 11:03:13'
-        self._insert(self.con, self.cs, table=self.table, data=dict(timestamp1=timestamp1))
-        self.assertEqual(str(self._get_row(self.table)[3]),timestamp1_string)
+        self._insert(self.con, self.cs, table=self.table, 
+            data=dict(timestamp1=timestamp1))
+        self.assertEqual(str(self._get_row(self.table)[3]),
+            timestamp1_string)
         #self.assertEqual(self._get_lastrow()[3],timestamp1)
 
     @requires('time_datatype')
@@ -1246,7 +1254,8 @@ class TestTypesEmbedded(AcuteBase):
         '''Insert time using string'''
         time1 = '11:03:13'
         time1_time = datetime.time(11, 03, 13)
-        self._insert(self.con, self.cs, table=self.table, data=dict(time1=time1))
+        self._insert(self.con, self.cs, table=self.table, 
+            data=dict(time1=time1))
         #self.assertEqual(self._get_lastrow()[4],time1_time)
         self.assertEqual(str(self._get_row(self.table)[4]),time1)
 
@@ -1272,15 +1281,19 @@ class TestTypesEmbedded(AcuteBase):
 
     @requires('time_datatype_time')
     def test_datatypes_multi(self):
-        'Insert a multitude of date/time datatypes in one statement using datetime'
+        """Insert a multitude of date/time datatypes in one statement
+        Uses datetime module.
+        """
         data = dict(date1=datetime.date(1970, 4, 1),
-                    timestamp1=datetime.datetime(2005, 11, 10, 11, 52, 35, 54839),
-                    time1=datetime.time(23, 59, 59))
+           timestamp1=datetime.datetime(2005, 11, 10, 11, 52, 35, 54839),
+           time1=datetime.time(23, 59, 59))
         self._insert(self.con, self.cs, table=self.table, data=data)
         
     @requires('time_datatype')
     def test_datatypes_multi_string(self):
-        '''Insert a multitude of date/time datatypes in one statement using strings'''
+        """Insert a multitude of date/time datatypes in one statement
+        Uses strings.
+        """
         data = dict(date1='1970-04-01',
                     timestamp1='2007-05-01 11:03:13',
                     time1='11:03:13')
