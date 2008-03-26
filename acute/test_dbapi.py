@@ -17,34 +17,33 @@ import datetime
 import popen2
 import config
 import util
-from util import OrderedDict
+from util import OrderedDict, connect, connect_plus_cursor, TableBase
 import decorators
 from decorators import requires, raises, supported_features
 import drivers
 
 table_prefix = config.table_prefix
 driver_name = config.driver_name
-DriverMeta = getattr(drivers, driver_name)
-driver_meta = DriverMeta()
+driver_meta= getattr(drivers, driver_name)()
 dbms_meta = driver_meta.dbms()
 
 decorators.register_supported_features(driver_meta, dbms_meta)
 
 driver_module = util.import_module(driver_name)
 
-master_table_list = ['testtypes','booze','barflys']
-tables = {}
-for table_name in master_table_list:
-  tables[table_name] = table_prefix + table_name
-
 tm = dbms_meta.typemap
-ddl1 = ('create table %sbooze (name %s(20))' %
-    (table_prefix, tm.string))
-ddl2 = ('create table %sbarflys (name %s(20))' %
-    (table_prefix, tm.string))
-
 #TODO: Change to be table per column?  Or just make _insert smarter?
-ddl3 = ("""create table %stesttypes (
+class Booze(TableBase):
+    name = '%sbooze' % table_prefix
+    ddl = ('create table %s (name %s(20))' % (name, tm.string))
+
+class Barflys(TableBase):
+    name = '%sbarflys' % table_prefix
+    ddl = ('create table %s (name %s(20))' % (name, tm.string))
+
+class TestTypes(TableBase): 
+    name = '%stesttypes' % table_prefix
+    ddl = ("""create table %stesttypes (
         int_fld %s,
         varchar1 %s(3),
         date1 %s,
@@ -53,32 +52,14 @@ ddl3 = ("""create table %stesttypes (
         clob1 %s,
         blob1 %s
         )"""
-        % (table_prefix, tm.serial, tm.string, tm.date, tm.timestamp, 
+        % (table_prefix, tm.serial, tm.string, tm.date, tm.timestamp,
            tm.time, tm.clob, tm.blob)
-)
+        )
 
-def create_table(con, cs, statement):
-    #print "Create table statement is", statement
-    cs.execute(statement)
-    if dbms_meta.transactional_ddl:
-      con.commit()
+tables = [Booze, Barflys, TestTypes]
 
-def drop_table(con, cs, table, ignore_errors=False):
-    """Given a connection & cursor, drop a table.
-    Optionally, ignore errors that occurred in the process.
-    Commit changes when done.
-    """
-    try:
-        cs.execute('drop table %s' % table)
-    except:
-        if not ignore_errors:
-            raise
-    if dbms_meta.transactional_ddl:
-       con.commit()
-
-def setup_once():
+def setup_module():
     "Create the tables used in the tests. Also create the db if needed."
-    tear_down_once()
     try:
         con = connect()
     except:
@@ -88,7 +69,7 @@ def setup_once():
             create_db_cmd = ''
 
         if create_db_cmd:
-            cout,cin = popen2.popen2(create_db_cmd)
+            cout, cin = popen2.popen2(create_db_cmd)
             cin.close()
             cout.read()
             con = connect()
@@ -97,41 +78,18 @@ def setup_once():
                   "create command given")
 
     cs = con.cursor() 
-    for statement in [ddl1, ddl2, ddl3]:
-        create_table(con, cs, statement)
+    for table in tables:
+        table.create(con = con, cur = cs)
     con.close()
     return
 
-def tear_down_once():
-    for table in tables.values():
-        con = connect()
-        cs = con.cursor()
+def teardown_module():
+    for table in tables:
         try:
-            cs.execute("drop table %s" % table)
-            con.commit()
+            table.drop()
         except driver_module.Error:
             pass
     con.close()
-
-def connect(connection_info=None, connection_method='default'):
-    if connection_info == None:
-        connection_info = config.ConnectionInfo
-
-    args, kwargs = driver_meta.convert_connect_args(connection_info)
-
-    try:
-        con = driver_module.connect(*args, **kwargs)
-    except AttributeError:
-        raise("No connect method found in driver module")
-    return con
-
-def connect_plus_cursor(connection_info=None, connection_method='default'):
-    con = connect(connection_info, connection_method)
-    try:
-        cs = con.cursor()
-    except AttributeError:
-        raise("No cursor method found on connection")
-    return con, cs
 
 
 class AcuteBase(unittest.TestCase):
@@ -159,14 +117,15 @@ class AcuteBase(unittest.TestCase):
 
     def _insert(self, con, cur, table=None, data=None, stmt_type='insert'):
         if not table:
-            table = table_prefix + 'booze'
+            table = Booze
         if not data:
             data = dict(name="Coopers")
         cols = ", ".join(data)
 
-        stmt_base = 'insert into %s (%s) values' % (table, cols)
+        stmt_base = 'insert into %s (%s) values' % (table.name, cols)
         if stmt_type == 'select':
-            stmt_base = 'select * from %s where %s = ' % (table, data.keys()[0])
+            stmt_base = 'select * from %s where %s = ' % (
+                table.name, data.keys()[0])
 
         data_keys = data.keys()
         markers = []
@@ -195,6 +154,7 @@ class AcuteBase(unittest.TestCase):
 
 class TestModule(AcuteBase):
     """ Modules define certain attributes"""
+
     def test_connect(self):
         "Can connect to database"
         con = self._connect()
@@ -392,7 +352,7 @@ class TestConnection(AcuteBase):
         con, cs = connect_plus_cursor()
         con.close()
 
-        qry = "select * from %sbooze" % table_prefix
+        qry = "select * from %s" % Booze.name
  
         if self.driver_name == 'pysqlite2':
             expected_error = self.driver.ProgrammingError
@@ -521,12 +481,10 @@ class TestCursor(AcuteBase):
     @requires('amiracle')
     def test_lastrowid(self):
         "Insert into identity column sets cursor.lastrowid"
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
         
         data = dict(name=None, desc='Bass')
-        self._insert(con, cur, table=tables['booze'], data=data )
+        self._insert(con, cur, table=Booze, data=data )
         self.failUnlessEqual(self.cs.lastrowid, 1)
         self.failUnlessEqual(self.cs.rowcount, 1)
         
@@ -534,28 +492,28 @@ class TestCursor(AcuteBase):
     def test_insert_None(self):
         "Insert a row with Null columns"
         self._createTable()
-        self._insertData( (None, None) )
+        self._insert( (None, None) )
         id_value = self.cs.lastrowid()
         self.assertEqual(1, id_value)
 
     @requires('amiracle')
     def test_insert_type_mismatch(self):
          "Insert using the wrong datatype raises TypeError"
-         self._createTable()
-         self.assertRaises(TypeError, self._insertData, (1.0, None))
+         Booze.create()
+         self.assertRaises(TypeError, self._insert, (1.0, None))
 
     @requires('amiracle')
     def test_insert_truncation(self):
          "Insert that overflows column size raises ProgrammingError"
-         self._createTable()
+         Booze.create()
          self.assertRaises(dbapi.ProgrammingError,
-                           self._insertData, (1, 'XXXX'))
+             self._insert, (1, 'XXXX'))
 
     @requires('amiracle')
     def test_insert_parm_mismatch(self):
         "Inserting wrong number of columns raises ProgrammingError"
-        self._createTable()
-        self.assertRaises(dbapi.ProgrammingError, self._insertData, (1, ))
+        Booze.create()
+        self.assertRaises(dbapi.ProgrammingError, self._insert, (1, ))
 
     ##@requires('callproc') #, 'amiracle')
     #def test_callproc_xxx(self):
@@ -650,10 +608,10 @@ class TestCursor(AcuteBase):
         try:
             cur1 = con.cursor()
             cur2 = con.cursor()
-            cur1.execute("insert into %sbooze values ('Victoria Bitter')" % (
-                table_prefix
+            cur1.execute("insert into %s values ('Victoria Bitter')" % (
+                Booze.name
                 ))
-            cur2.execute("select name from %sbooze" % table_prefix)
+            cur2.execute("select name from %s" % Booze.name)
             booze = cur2.fetchall()
             self.assertEqual(len(booze),1)
             self.assertEqual(len(booze[0]),1)
@@ -663,16 +621,13 @@ class TestCursor(AcuteBase):
 
     def test_description(self):
         "Cursor description describes columns correctly"
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        drop_table(con, cur, tables['barflys'], ignore_errors=True)
+        con, cur = Booze.create(drop_existing=True)
         try:
-            create_table(con, cur, ddl1)
             self.assertEqual(cur.description,None,
                 "cursor.description should be none after executing a "
                 "statement that can't return rows (such as DDL)"
                 )
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             self.assertEqual(len(cur.description),1,
                 'cursor.description describes too many columns'
                 )
@@ -689,7 +644,7 @@ class TestCursor(AcuteBase):
                     % cur.description[0][1]
                   )
 
-            create_table(con, cur, ddl2)
+            Barflys.create(con = con, cur = cur)
             self.assertEqual(cur.description,None,
                 'cursor.description not being set to None when executing '
                 'no-result statements (eg. DDL)'
@@ -702,24 +657,22 @@ class TestCursor(AcuteBase):
         "Rowcount matches the number of rows inserted"
         #TODO: What about updates/deletes?
         con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        drop_table(con, cur, tables['barflys'], ignore_errors=True)        
+        Booze.create()
         try:
-            create_table(con, cur, ddl1)
             #TODO: Check this against PEP 249.  Original code claimed -1 was correct answer
             if driver_meta.sane_rowcount:
                 self.assertEqual(cur.rowcount,0,
                     'cursor.rowcount should be 0 after executing no-result '
                     'statements, not %s' % cur.rowcount
                     )
-            cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
-                table_prefix
+            cur.execute("insert into %s values ('Victoria Bitter')" % (
+                Booze.name
                 ))
             self.failUnless(cur.rowcount in (-1,1),
                 'cursor.rowcount should == number or rows inserted, or '
                 'set to -1 after executing an insert statement'
                 )
-            cur.execute("select name from %sbooze" % table_prefix)
+            cur.execute("select name from %s" % Booze.name)
             #TODO: Move to own test.
             if driver_meta.sane_empty_fetch:
                 self.failUnless(cur.rowcount in (-1,1),
@@ -727,7 +680,7 @@ class TestCursor(AcuteBase):
                     'set to -1 after executing a select statement, not %s.'
                     % cur.rowcount
                     )
-            create_table(con, cur, ddl2)
+            Barflys.create(con = con, cur = cur)
             #TODO: Check this against PEP 249.  Original code claimed -1 was correct answer
             if driver_meta.sane_rowcount:
                 self.assertEqual(cur.rowcount,0,
@@ -740,20 +693,18 @@ class TestCursor(AcuteBase):
     def test_rowcount_basic(self):
         "Rowcount should be 1 after singleton insert"
         con, cur = connect_plus_cursor()
-        cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
-            table_prefix
+        cur.execute("insert into %s values ('Victoria Bitter')" % (
+            Booze.name
             ))
         self.failUnless(cur.rowcount in (-1,1))
 
     def test_fetchall_insert(self):
         "Fetchall returns accurate data"
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
 
         self._insert(con, cur, data=dict(name="Cooper's"))
         self._insert(con, cur, data=dict(name="Victoria Bitter"))
-        cur.execute('select name from %sbooze' % table_prefix)
+        cur.execute('select name from %s' % Booze.name)
         res = cur.fetchall()
         ls = len(res)
         self.assertEqual(ls, 2,'fetchall wrong number of rows: %s' % ls)
@@ -776,15 +727,13 @@ class TestCursor(AcuteBase):
     def test_scrollable(self):
         "Scrollable cursors stay open after commits (test is broken)"
         #TODO: Is this how we want scrollable cursors to behave?  Fix test.
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
         
         data = [ (1, 'a'), (2, 'bb'), (3, 'ccc') ]
         self.cs.executemany("INSERT INTO %s VALUES (?, ?)" % 
-            self.tableName, data)
+            Booze.name, data)
         cur.set_scrollable(1)
-        self.cs.execute("SELECT * FROM %s" % self.tableName)
+        self.cs.execute("SELECT * FROM %s" % Booze.name)
         rows = self.cs.fetchmany( len(data) )
         for i in range( len(data) ):
             self.assertEqual(tuple(rows[i]),data[i])
@@ -800,46 +749,39 @@ class TestCursor(AcuteBase):
 
     def _populate(self, cur):
         """ Insert rows to setup the DB for the fetch tests. """
-        # TODO: Switch name to create_and_populate, move to base?
-        # drop_table(con, cur, tables['booze'], ignore_errors=True)
-        # create_table(con, cur, ddl1)
-
         for s in self.beer_samples:
-            cur.execute("insert into %sbooze values ('%s')" % 
-                (table_prefix,s))
-        #commit?
+            cur.execute("insert into %s values ('%s')" % 
+                (Booze.name, s))
+        #TODO: commit?
 
     def test_executemany(self):
         '''Insert multiple rows using executemany'''
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
+        con, cur = Booze.create()
         try:
-            create_table(con, cur, ddl1)
             largs = [ ("Cooper's",) , ("Boag's",) ]
             margs = [ {'beer': "Cooper's"}, {'beer': "Boag's"} ]
             if self.driver.paramstyle == 'qmark':
                 cur.executemany(
-                    'insert into %sbooze values (?)' % table_prefix, largs)
+                    'insert into %s values (?)' % Booze.name, largs)
             elif self.driver.paramstyle == 'numeric':
                 cur.executemany(
-                    'insert into %sbooze values (:1)' % table_prefix, largs)
+                    'insert into %s values (:1)' % Booze.nmae, largs)
             elif self.driver.paramstyle == 'named':
                 cur.executemany(
-                    'insert into %sbooze values (:beer)' % table_prefix, margs)
+                    'insert into %s values (:beer)' % Booze.name, margs)
             elif self.driver.paramstyle == 'format':
                 cur.executemany(
-                    'insert into %sbooze values (%%s)' % table_prefix, largs)
+                    'insert into %s values (%%s)' % Booze.name, largs)
             elif self.driver.paramstyle == 'pyformat':
                 cur.executemany(
-                    'insert into %sbooze values (%%(beer)s)' % (table_prefix),
-                    margs)
+                    'insert into %s values (%%(beer)s)' % (Booze.name), margs)
             else:
                 self.fail('Unknown paramstyle')
             #TODO: Move this to it's own test.  psycopg2 doesn't support
             #self.failUnless(cur.rowcount in (-1,2),
             #    'cursor.rowcount has incorrect value %r' % cur.rowcount
             #    )
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             res = cur.fetchall()
             self.assertEqual(len(res),2,
                   'cursor.fetchall retrieved incorrect number of rows'
@@ -853,21 +795,19 @@ class TestCursor(AcuteBase):
 
     def test_fetchone(self):
         '''Fetchone retrieves row & sets rowcount'''
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
 
         try:
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             self.assertEqual(cur.fetchone(),None,
                 'cursor.fetchone should return None if a query retrieves '
                 'no rows'
                 )
             self.failUnless(cur.rowcount in (-1,0))
 
-            cur.execute("insert into %sbooze values ('Victoria Bitter')" %
-                        table_prefix)
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute("insert into %s values ('Victoria Bitter')" 
+                        % Booze.name)
+            cur.execute('select name from %s' % Booze.name)
             r = cur.fetchone()
             self.assertEqual(len(r),1,
                 'cursor.fetchone should have retrieved a single row'
@@ -887,14 +827,11 @@ class TestCursor(AcuteBase):
 
     def test_fetchmany(self):
         '''Fetchmany retrieves rows & sets rowcount'''
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        drop_table(con, cur, tables['barflys'], ignore_errors=True)        
+        con, cur = Booze.create()
 
-        create_table(con, cur, ddl1)
         try:
             self._populate(cur)
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             r = cur.fetchmany()
             self.assertEqual(len(r),1,
                 'cursor.fetchmany retrieved incorrect number of rows, '
@@ -921,7 +858,7 @@ class TestCursor(AcuteBase):
 
             # Same as above, using cursor.arraysize
             cur.arraysize=4
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             r = cur.fetchmany() # Should get 4 rows
             self.assertEqual(len(r),4,
                 'cursor.arraysize not being honoured by fetchmany')
@@ -934,7 +871,7 @@ class TestCursor(AcuteBase):
                     "rowcount should be reset after empty fetch")
 
             cur.arraysize=6
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             rows = cur.fetchmany() # Should get all rows
             if driver_meta.sane_rowcount:
               #TODO: Move this to own test.
@@ -959,8 +896,8 @@ class TestCursor(AcuteBase):
                 self.failUnless(cur.rowcount in (-1,0),
                     "rowcount should be reset after empty fetch")
 
-            create_table(con, cur, ddl2)
-            cur.execute('select name from %sbarflys' % table_prefix)
+            Barflys.create(con = con, cur = cur)
+            cur.execute('select name from %s' % Barflys.name)
             r = cur.fetchmany() # Should get empty sequence
             self.assertEqual(len(r),0,
                 'cursor.fetchmany should return an empty sequence if '
@@ -974,13 +911,11 @@ class TestCursor(AcuteBase):
 
     def test_fetchall(self):
         '''Fetchall retrieves rows & sets rowcount'''
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
 
         try:
             self._populate(cur)
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             rows = cur.fetchall()
             self.assertEqual(len(rows),len(self.beer_samples),
                 'cursor.fetchall did not retrieve all rows'
@@ -1004,7 +939,7 @@ class TestCursor(AcuteBase):
               self.failUnless(cur.rowcount in (-1,len(self.beer_samples)))
 
             #self.executeDDL2(cur)
-            cur.execute('select name from %sbarflys' % table_prefix)
+            cur.execute('select name from %s' % Barflys.name)
             rows = cur.fetchall()
             self.failUnless(cur.rowcount in (-1,0))
             self.assertEqual(len(rows),0,
@@ -1026,26 +961,23 @@ class TestCursor(AcuteBase):
         return rows.
         """
         # Create table
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        Booze.create(con = con, cur = cur)
         self.assertRaises(self.driver.Error,cur.fetchone)
         self.assertRaises(self.driver.Error,cur.fetchmany,4)
         self.assertRaises(self.driver.Error,cur.fetchall)
   
         # Insert
-        cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
-            table_prefix))
+        cur.execute("insert into %s values ('Victoria Bitter')" % (
+            Booze.name))
         self.assertRaises(self.driver.Error,cur.fetchone)
 
     def test_mixedfetch(self):
         '''Can mix fetchone, fetchmany, and fetchall'''
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
 
         try:
             self._populate(cur)
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('select name from %s' % Booze.name)
             rows1  = cur.fetchone()
             rows23 = cur.fetchmany(2)
             rows4  = cur.fetchone()
@@ -1180,20 +1112,18 @@ class TestCursor(AcuteBase):
 class TestTypesEmbedded(AcuteBase):
     def setUp(self):
         self.con, self.cs = connect_plus_cursor()
-        self.table = tables['testtypes']
-        drop_table(self.con, self.cs, self.table, ignore_errors=True)
-        create_table(self.con, self.cs, ddl3)
+        TestTypes.create(con = self.con, cur = self.cs)
 
     def tearDown(self):
         self.con.rollback()
-        drop_table(self.con, self.cs, self.table, ignore_errors=True)
+        TestTypes.drop(con = self.con, cur = self.cs, ignore_errors=True)
         self.con.commit()
         self.con.close()
 
     def _get_lastrow(self):
         """Return the last row inserted by this process"""
         id_value = self.cs.lastrowid
-        self._insert(self.con, self.cs, table=self.table, 
+        self._insert(self.con, self.cs, table=TestTypes,
             data=dict(int1=id_value), stmt_type='select')
         #TODO: Was the ugly hack to insert worth it?  Or should I just not use parammarker here?
         #self.cs.execute('select * from %s where int1 = ?' % self.table, id_value)
@@ -1204,7 +1134,7 @@ class TestTypesEmbedded(AcuteBase):
         """Return a row from a table.  
         If there's more than one row, it's an error.
         """
-        self.cs.execute("select * from %s" % table)
+        self.cs.execute("select * from %s" % table.name)
         row = self.cs.fetchall()
         cnt = len(row)
         self.assertEqual(cnt, 1, "Invalid row count %s from fetchall" % cnt)
@@ -1215,17 +1145,17 @@ class TestTypesEmbedded(AcuteBase):
         date1 = '2007-05-01'
         #date1 = "'05/01/2007'"
         data = dict(date1 = datetime.date(2007, 05, 01))
-        self._insert(self.con, self.cs, table=self.table, data=data)
+        self._insert(self.con, self.cs, table=TestTypes, data=data)
         #TODO: Weakened this test to str() for psycopg2
-        self.assertEqual(str(self._get_row(self.table)[2]), date1)
+        self.assertEqual(str(self._get_row(TestTypes)[2]), date1)
 
     def test_date_insert(self):
         '''Insert dates using datetime dates'''
         date1_string = '2007-05-01'
         date1 = datetime.date(2007, 05, 01)
         data = dict(date1 = date1)
-        self._insert(self.con, self.cs, table=self.table, data=data)
-        self.assertEqual(str(self._get_row(self.table)[2]), date1_string)
+        self._insert(self.con, self.cs, table=TestTypes, data=data)
+        self.assertEqual(str(self._get_row(TestTypes)[2]), date1_string)
 
     @requires('timestamp_datatype_subsecond')
     def test_timestamp_insert_string(self):
@@ -1233,19 +1163,19 @@ class TestTypesEmbedded(AcuteBase):
         timestamp1 = '2007-05-01 16:00:57.180210'
         timestamp1_datetime = datetime.datetime(
             2007, 05, 01, 16, 00, 57, 180210)
-        self._insert(self.con, self.cs, table=self.table, 
+        self._insert(self.con, self.cs, table=TestTypes, 
             data=dict(timestamp1=timestamp1))
         #print "RowID is ", self.cs.lastrowid, "."
-        self.assertEqual(str(self._get_row(self.table)[3]),timestamp1)
+        self.assertEqual(str(self._get_row(TestTypes)[3]),timestamp1)
         #self.assertEqual(self._get_lastrow()[3],timestamp1_datetime)
 
     def test_timestamp_insert(self):
         '''Insert timestamp using datetime's datetime'''
         timestamp1 = datetime.datetime(2007, 05, 01, 11, 03, 13)
         timestamp1_string = '2007-05-01 11:03:13'
-        self._insert(self.con, self.cs, table=self.table, 
+        self._insert(self.con, self.cs, table=TestTypes, 
             data=dict(timestamp1=timestamp1))
-        self.assertEqual(str(self._get_row(self.table)[3]),
+        self.assertEqual(str(self._get_row(TestTypes)[3]),
             timestamp1_string)
         #self.assertEqual(self._get_lastrow()[3],timestamp1)
 
@@ -1254,30 +1184,30 @@ class TestTypesEmbedded(AcuteBase):
         '''Insert time using string'''
         time1 = '11:03:13'
         time1_time = datetime.time(11, 03, 13)
-        self._insert(self.con, self.cs, table=self.table, 
+        self._insert(self.con, self.cs, table=TestTypes, 
             data=dict(time1=time1))
         #self.assertEqual(self._get_lastrow()[4],time1_time)
-        self.assertEqual(str(self._get_row(self.table)[4]),time1)
+        self.assertEqual(str(self._get_row(TestTypes)[4]),time1)
 
     @requires('time_datatype_time', 'sane_timestamp')
     def test_time_insert(self):
         '''Insert time using datetime's time'''
         data = dict(time1 = datetime.time(11, 3, 13))
-        self._insert(self.con, self.cs, table=self.table, data=data)
-        self.assertEqual(self._get_row(self.table)[4],data['time1'])
+        self._insert(self.con, self.cs, table=TestTypes, data=data)
+        self.assertEqual(self._get_row(TestTypes)[4],data['time1'])
 
     @requires('time_datatype_subsecond')
     def test_time_insert_subsecond_string(self):
         'Insert time with subsecond precision using string'
         time1 = '11:03:13.9999'
         data = dict(time1 = time1)
-        self._insert(self.con, self.cs, table=self.table, data=data)
+        self._insert(self.con, self.cs, table=TestTypes, data=data)
 
     @requires('time_datatype_subsecond', 'time_datatype_time')
     def test_time_insert_subsecond(self):
         "Insert time with subsecond precision using datetime's time"
         data = dict(time1 = datetime.time(11, 3, 13, 9999))
-        self._insert(self.con, self.cs, table=self.table, data=data)
+        self._insert(self.con, self.cs, table=TestTypes, data=data)
 
     @requires('time_datatype_time')
     def test_datatypes_multi(self):
@@ -1287,7 +1217,7 @@ class TestTypesEmbedded(AcuteBase):
         data = dict(date1=datetime.date(1970, 4, 1),
            timestamp1=datetime.datetime(2005, 11, 10, 11, 52, 35, 54839),
            time1=datetime.time(23, 59, 59))
-        self._insert(self.con, self.cs, table=self.table, data=data)
+        self._insert(self.con, self.cs, table=TestTypes, data=data)
         
     @requires('time_datatype')
     def test_datatypes_multi_string(self):
@@ -1297,16 +1227,14 @@ class TestTypesEmbedded(AcuteBase):
         data = dict(date1='1970-04-01',
                     timestamp1='2007-05-01 11:03:13',
                     time1='11:03:13')
-        self._insert(self.con, self.cs, table=self.table, data=data)
+        self._insert(self.con, self.cs, table=TestTypes, data=data)
         
     def test_None(self):
         '''Handle Python's None as a database null'''
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
         try:
-            cur.execute('insert into %sbooze values (NULL)' % table_prefix)
-            cur.execute('select name from %sbooze' % table_prefix)
+            cur.execute('insert into %s values (NULL)' % Booze.name)
+            cur.execute('select name from %s' % Booze.name)
             r = cur.fetchall()
             self.assertEqual(len(r),1)
             self.assertEqual(len(r[0]),1)
@@ -1364,9 +1292,7 @@ class TestSQLProcs(AcuteBase):
     @requires('callproc', 'nextset')
     def test_nextset(self):
         '''Stored procedure calls return result sets'''
-        con, cur = connect_plus_cursor()
-        drop_table(con, cur, tables['booze'], ignore_errors=True)
-        create_table(con, cur, ddl1)
+        con, cur = Booze.create()
         self._populate(cur)
 
         try:
@@ -1383,9 +1309,8 @@ class TestSQLProcs(AcuteBase):
             self.help_nextset_tearDown(cur)
             con.close()
 
-setup_once()
 if __name__ == '__main__':
-    setup_once()
+    setup_module()
     suite = unittest.TestSuite()
 
     for test in [

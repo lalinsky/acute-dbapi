@@ -1,4 +1,5 @@
 """ Utility functions for the acute DBAPI testsuite """
+import config
 
 def import_module(driver_name):
     """ Import a database module by name.  SQLite requires special handling.
@@ -70,3 +71,72 @@ def find_public_atrs(obj):
     atrs = dir(obj)
     return [atr for atr in atrs if not atr.startswith('_')]
 
+
+import drivers
+driver_meta = getattr(drivers, config.driver_name)()
+driver_module = import_module(config.driver_name)
+
+def connect(connection_info=None, connection_method='default'):
+    if connection_info == None:
+        connection_info = config.ConnectionInfo
+
+    args, kwargs = driver_meta.convert_connect_args(connection_info)
+
+    try:
+        con = driver_module.connect(*args, **kwargs)
+    except AttributeError:
+        raise("No connect method found in driver module")
+    return con
+
+def connect_plus_cursor(connection_info=None, connection_method='default'):
+    con = connect(connection_info, connection_method)
+    try:
+        cs = con.cursor()
+    except AttributeError:
+        raise("No cursor method found on connection")
+    return con, cs
+
+class TableBase(object):
+    """A base class for tables.  Defines create & drop methods
+    that abstract away concerns about the table already/not
+    existing, and whether you need to commit afterwards (some dbs
+    have transactional ddl, and other's don't. Default is False.)
+    """
+
+    transactional_ddl = True 
+
+    @classmethod
+    def create(cls, con=None, cur=None, drop_existing = True):
+        """Create a table. 
+        Optionally drop any existing one first (default is True)
+        Can use an existing connection or cursor if supplied, 
+           otherwise it will create new ones.
+        """
+        if not con:
+            con, cur = connect_plus_cursor()
+        if drop_existing:
+            cls.drop(con, cur, ignore_errors = True)
+
+        cur.execute(cls.ddl)
+
+        if cls.transactional_ddl:
+            con.commit()
+        return con, cur
+
+    @classmethod
+    def drop(cls, con, cur, ignore_errors = True):
+        """Given a connection & cursor, drop a table.
+        Optionally, ignore errors that occurred in the process.
+        Commit changes when done.
+        """
+        if not con:
+            con, cur = connect_plus_cursor()
+        try:
+            cur.execute('drop table %s' % cls.name)
+        except:
+            if not ignore_errors:
+                raise
+        if cls.transactional_ddl or 1==1:
+            con.commit()
+        return con, cur
+ 
