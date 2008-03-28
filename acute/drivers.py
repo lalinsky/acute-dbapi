@@ -42,13 +42,25 @@ class DriverBase(object):
     inoperable_closed_connections = attr(True,
             doc = "Closed connections are no longer usable",
             conformance_level = cl.Basic)
-    
+   
+    inoperable_closed_connections_cursor = attr(True, 
+            doc = "Closed connections can't create new cursors",
+            conformance_level = cl.Basic)
+
+    inoperable_closed_connections_close = attr(True, 
+            doc = "Closed connections can't be closed again",
+            conformance_level = cl.Basic)
+ 
     sane_empty_fetch = attr(True,
             doc = "Fetch should fail if no query is issued",
             conformance_level = cl.Basic)
 
     sane_rowcount = attr(True,
             doc = "Rowcount should be set correctly by fetchmany",
+            conformance_level = cl.Intermediate)
+
+    binary_buffer = attr(True, 
+            doc = "Binary type is compatible with buffers", 
             conformance_level = cl.Intermediate)
 
     rowcount_reset_empty_fetch = attr(True,
@@ -69,6 +81,10 @@ class DriverBase(object):
 
     sane_timestamp = attr(True,
             doc = "Timestamp returns datetime compatible timestamps",
+            conformance_level = cl.Intermediate)
+
+    sane_time = attr(True, 
+            doc = "Time datatype compatible with mktime",
             conformance_level = cl.Intermediate)
 
     setoutputsize = attr(True,
@@ -98,11 +114,10 @@ class pysqlite2(DriverBase):
 
     dbms = databases.sqlite
 
-    inoperable_closed_connections = False
+    inoperable_closed_connections_close = False
     sane_empty_fetch = False
     driver_level_datatypes = False
     sane_rowcount = False
-    sane_empty_fetch = False
     time_datatype_time = False
 
 
@@ -113,7 +128,8 @@ class psycopg2(DriverBase):
         return [], kwargs
 
     dbms = databases.postgres
-
+    binary_buffer = False
+    sane_timestamp = False
     rowcount_reset_empty_fetch = False
 
 
@@ -129,7 +145,8 @@ class MySQLdb(DriverBase):
 
     dbms = databases.mysql 
 
-    sane_timestamp = False
+    inoperable_closed_connections_cursor = False
+    sane_time = False
     sane_empty_fetch = False
     setoutputsize = False
     rowcount_reset_empty_fetch = False

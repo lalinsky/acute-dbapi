@@ -139,7 +139,9 @@ class informix(IBMBase):
     def get_create_db_cmd(self, db_name):
         return "create database %s" % db_name
 
-    typemap = TypeMap(serial = "int")
+    typemap = TypeMap(serial = "int", 
+        timestamp = "datetime YEAR to FRACTION(5)", 
+        time = "datetime HOUR to SECOND")
     #TODO: Insert 0 value to tell database to use next sequence number
     #typemap.serial = "serial"
        

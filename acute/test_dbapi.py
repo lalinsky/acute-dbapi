@@ -19,8 +19,9 @@ import config
 import util
 from util import OrderedDict, connect, connect_plus_cursor, TableBase
 import decorators
-from decorators import requires, raises, supported_features
+from decorators import requires, raises
 import drivers
+import warnings
 
 table_prefix = config.table_prefix
 driver_name = config.driver_name
@@ -64,7 +65,8 @@ def setup_module():
         con = connect()
     except:
         try:
-            create_db_cmd = dbms_meta.get_create_db_cmd(connection_info)
+            create_db_cmd = dbms_meta.get_create_db_cmd(
+                config.ConnectionInfo)
         except NotImplementedError:
             create_db_cmd = ''
 
@@ -84,11 +86,12 @@ def setup_module():
     return
 
 def teardown_module():
+    con = connect()
     for table in tables:
         try:
             table.drop()
         except driver_module.Error:
-            pass
+            warnings.warn("Drop on table %s failed" % table.name)
     con.close()
 
 
@@ -235,7 +238,7 @@ class TestModuleDatatypes(AcuteBase):
         d1 = self.driver.Date(2002,12,25)
         d2 = self.driver.DateFromTicks(time.mktime((2002,12,25,0,0,0,0,0,0)))
         # Can we assume this? API doesn't specify, but it seems implied
-        # self.assertEqual(str(d1),str(d2))
+        self.assertEqual(str(d1),str(d2))
 
     @requires('time_datatype')
     def test_Time(self):
@@ -243,8 +246,9 @@ class TestModuleDatatypes(AcuteBase):
         t1 = self.driver.Time(13,45,30)
         t2 = self.driver.TimeFromTicks(time.mktime((2001,1,1,13,45,30,0,0,0)))
         # Can we assume this? API doesn't specify, but it seems implied
-        # self.assertEqual(str(t1),str(t2))
+        self.assertEqual(str(t1),str(t2))
 
+    @requires('sane_timestamp')
     def test_Timestamp(self):
         'Module supports Timestamp and TimestampFromTicks'
         t1 = self.driver.Timestamp(2002,12,25,13,45,30)
@@ -252,7 +256,7 @@ class TestModuleDatatypes(AcuteBase):
             time.mktime((2002,12,25,13,45,30,0,0,0))
             )
         # Can we assume this? API doesn't specify, but it seems implied
-        # self.assertEqual(str(t1),str(t2))
+        self.assertEqual(str(t1), str(t2))
 
     @requires('driver_level_datatypes_binary')
     def test_Binary(self):
@@ -321,13 +325,17 @@ class TestModuleDatatypes(AcuteBase):
                 self.driver.Timestamp(2007, 05, 01, 11, 03, 13),
                 datetime.datetime(2007, 05, 01, 11, 03, 13))
 
-    #TODO: Put this back in
-    #def test_binary(self):
-    #    #TODO: Inserted str()s here for psycopg2
-    #    self.assertEqual(str(self.driver.Binary(chr(0) + "'")),
-    #                     str(buffer(chr(0) + "'")))
+    @requires('binary_buffer')
+    def test_binary(self):
+        """Binary type should be compatible with buffers."""
+        #TODO: Inserted str()s here for psycopg2.  Add another test without?
+        self.assertEqual(str(self.driver.Binary(chr(0) + "'")),
+                         str(buffer(chr(0) + "'")))
 
 class TestConnection(AcuteBase):
+    #TODO: Add a set of tests that are more specific about which errors are thrown.
+    expected_error = driver_module.Error 
+
     def test_success(self):
         """Successful connect and close"""
         self._connect()
@@ -337,52 +345,48 @@ class TestConnection(AcuteBase):
         """Can't commit a closed connection"""
         con = connect()
         con.close()
-        self.assertRaises(self.driver.Error,con.commit)
+        self.assertRaises(self.expected_error, con.commit)
 
-    @requires('inoperable_closed_connections')
+    @requires('inoperable_closed_connections_close')
     def test_close_close(self):
         """Can't close a closed connection """
         con = connect()
         con.close()
-        self.assertRaises(self.driver.Error, con.close)
-        
+        self.assertRaises(self.expected_error, con.close)
+
     @requires('inoperable_closed_connections')
-    def test_close(self):
-        """Can't commit, execute, or close a closed connection """
+    def test_close_rollback(self):
+        """Can't rollback a closed connection"""
+        con = connect()
+        con.close()
+        self.assertRaises(self.expected_error, con.rollback)
+
+    @requires('inoperable_closed_connections')
+    @requires('inoperable_closed_connections_cursor')
+    def test_close_cursor(self):
+        """Can't get a new cursor on a closed connection"""
+        con = connect()
+        con.close()
+        self.assertRaises(self.expected_error, con.cursor)
+
+    @requires('inoperable_closed_connections')
+    def test_close_execute(self):
+        """Can't execute on a cursor with a closed connection"""
+        # pysqlite2 raises ProgrammingError, while pyscopg2, MySQLdb,
+        #  and ibmdb raise InterfaceError.  There's no standard here
+        #  so let drivers get away with any subclass of Error.
         con, cs = connect_plus_cursor()
         con.close()
 
         qry = "select * from %s" % Booze.name
- 
-        if self.driver_name == 'pysqlite2':
-            expected_error = self.driver.ProgrammingError
-        elif self.driver_name in ('psycopg2', 'MySQLdb'):
-            expected_error = self.driver.InterfaceError
-        else:
-            # There's no standard established here, so let unknown drivers get
-            #  get away with any sort of "Error"
-            expected_error = self.driver.Error
-        
-        # Something about the way this gets raise screws up assertRaisess for
-        #  pyscopg2, MySQLdb, and ibmdb.  (But strangely, not pysqlite2).
-        #self.assertRaises(expected_error, cs.execute(qry))
-        try:
-            cs.execute(qry)
-        except expected_error:
-            pass
-        else:
-           raise(AssertionError, 'Driver did not raise interfacerror')
-
-        self.assertRaises(self.driver.Error, con.commit)
-        self.assertRaises(self.driver.Error, con.close)
+        self.assertRaises(self.expected_error, cs.execute, qry)
 
     @requires('explicit_db_create')
     def test_bogusDB(self):
         """Connection should fail using bogus database"""
         connection_info = config.ConnectionInfo()
         connection_info.database = 'NonexistentDatabase'
-        #TODO: Should this be more specific, like OperationalError?
-        self.assertRaises(self.driver.Error, 
+        self.assertRaises(self.expected_error, 
                           self._connect, connection_info)
 
     @requires('authentication')
@@ -390,7 +394,7 @@ class TestConnection(AcuteBase):
         """Connection should fail using bogus username"""
         connection_info = config.ConnectionInfo()
         connection_info.username = 'kingarthur'
-        self.assertRaises(self.driver.Error,  
+        self.assertRaises(self.expected_error,  
                           self._connect, connection_info)
 
     @requires('authentication')
@@ -398,7 +402,7 @@ class TestConnection(AcuteBase):
         """Connection should fail using bogus password"""
         connection_info = config.ConnectionInfo()
         connection_info.password = 'xyzzy'
-        self.assertRaises(self.driver.Error, 
+        self.assertRaises(self.expected_error,
                           self._connect, connection_info)
 
     @requires('authentication')
@@ -406,7 +410,7 @@ class TestConnection(AcuteBase):
         """Connection should fail using blank password"""
         connection_info = config.ConnectionInfo()
         connection_info.password = ''
-        self.assertRaises(self.driver.Error, 
+        self.assertRaises(self.expected_error, 
                           self._connect, connection_info)
      
     def test_commit_nochange(self):
@@ -477,7 +481,6 @@ class TestCursor(AcuteBase):
             con.close()
     
     @requires('lastrowid')
-    #TODO: Does anything not support lastrowid?
     @requires('amiracle')
     def test_lastrowid(self):
         "Insert into identity column sets cursor.lastrowid"
@@ -506,14 +509,14 @@ class TestCursor(AcuteBase):
     def test_insert_truncation(self):
          "Insert that overflows column size raises ProgrammingError"
          Booze.create()
-         self.assertRaises(dbapi.ProgrammingError,
+         self.assertRaises(driver_module.ProgrammingError,
              self._insert, (1, 'XXXX'))
 
     @requires('amiracle')
     def test_insert_parm_mismatch(self):
         "Inserting wrong number of columns raises ProgrammingError"
         Booze.create()
-        self.assertRaises(dbapi.ProgrammingError, self._insert, (1, ))
+        self.assertRaises(driver_module.ProgrammingError, self._insert, (1, ))
 
     ##@requires('callproc') #, 'amiracle')
     #def test_callproc_xxx(self):
@@ -653,6 +656,7 @@ class TestCursor(AcuteBase):
             con.close()
 
     #TODO: Test rowcount with scrollable cursors?
+    @requires('rowcount_reset_empty_fetch')
     def test_rowcount(self):
         "Rowcount matches the number of rows inserted"
         #TODO: What about updates/deletes?
@@ -661,7 +665,7 @@ class TestCursor(AcuteBase):
         try:
             #TODO: Check this against PEP 249.  Original code claimed -1 was correct answer
             if driver_meta.sane_rowcount:
-                self.assertEqual(cur.rowcount,0,
+                self.assertEqual(cur.rowcount, 0,
                     'cursor.rowcount should be 0 after executing no-result '
                     'statements, not %s' % cur.rowcount
                     )
@@ -1189,7 +1193,7 @@ class TestTypesEmbedded(AcuteBase):
         #self.assertEqual(self._get_lastrow()[4],time1_time)
         self.assertEqual(str(self._get_row(TestTypes)[4]),time1)
 
-    @requires('time_datatype_time', 'sane_timestamp')
+    @requires('time_datatype_time', 'sane_time')
     def test_time_insert(self):
         '''Insert time using datetime's time'''
         data = dict(time1 = datetime.time(11, 3, 13))

@@ -15,16 +15,19 @@ Module supports Time and TimeFromTicks ... ok
 Module supports TimeFromTicks ... ok
 Module supports Timestamp and TimestampFromTicks ... ok
 Module supports TimestampFromTicks ... ok
+Binary type should be compatible with buffers. ... ok
 Module's date is equivalent to datetime's date ... ok
 Module's time attribute is equivalent to datetime's time ... ok
 Module's Timestamp attribute is equivalent to datetime's datetime ... ok
-Connection objects should include the exceptions as attributes (optional) ... ok
+Connection objects should include the exceptions ... ok
 Connection should fail using bogus database ... ok
 Connection should fail using bogus password ... ok
 Connection should fail using bogus username ... ok
-Can't commit, execute, or close a closed connection ... ok
 Can't close a closed connection ... ok
 Can't commit a closed connection ... ok
+Can't get a new cursor on a closed connection ... (Unsupported) ok
+Can't execute on a cursor with a closed connection ... ok
+Can't rollback a closed connection ... ok
 Commit must be defined, even if it doesn't do anything ... ok
 Consecutive commits should be successfull ... ok
 Connections need to be able to create cursors ... ok
@@ -47,18 +50,18 @@ Fetchone retrieves row & sets rowcount ... ok
 Insert a row with Null columns ... (Skipped) ok
 Inserting wrong number of columns raises ProgrammingError ... (Skipped) ok
 Insert that overflows column size raises ProgrammingError ... (Skipped) ok
-Insert using the wrong datatype raises TypeError ... (Skipped) ok
+Insert using the wrong datatype raises TypeError ... ok
 Insert into identity column sets cursor.lastrowid ... (Skipped) ok
 Can mix fetchone, fetchmany, and fetchall ... ok
-Rowcount matches the number of rows inserted ... ok
+Rowcount matches the number of rows inserted ... (Unsupported) ok
 Rowcount should be 1 after singleton insert ... ok
 Scrollable cursors stay open after commits (test is broken) ... (Skipped) ok
 Scrollable cursors are set with cursor.set_scrollable ... (Skipped) ok
 Insert works with cursor.setinputsize ... ok
 Insert works with cursor.setoutputsize ... (Unsupported) ok
 Handle Python's None as a database null ... ok
-Insert a multitude of date/time datatypes in one statement using datetime ... ok
-Insert a multitude of date/time datatypes in one statement using strings ... ok
+Insert a multitude of date/time datatypes in one statement ... ok
+Insert a multitude of date/time datatypes in one statement ... ok
 Insert dates using datetime dates ... ok
 Insert dates using strings ... ok
 Insert time using datetime's time ... (Unsupported) ok
@@ -71,6 +74,6 @@ Call a stored procedure (experimental) ... (Skipped) ok
 Stored procedure calls return result sets ... (Unsupported) ok
 
 ----------------------------------------------------------------------
-Ran 71 tests in 0.965s
+Ran 74 tests in 0.960s
 
 OK
