@@ -106,6 +106,10 @@ class DriverBase(object):
             doc = "Supports lastrowid",
             conformance_level = cl.Basic)
 
+    callproc = attr(True,
+        doc = "Database support stored procedures (Optional)",
+        conformance_level = cl.Optional)
+
 
 class pysqlite2(DriverBase):
 
@@ -119,6 +123,7 @@ class pysqlite2(DriverBase):
     driver_level_datatypes = False
     sane_rowcount = False
     time_datatype_time = False
+    callproc = False
 
 
 class psycopg2(DriverBase):

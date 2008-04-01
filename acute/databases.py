@@ -40,6 +40,9 @@ class DatabaseBase(object):
         """
         raise NotImplementedError
 
+    transaction_isolation = attr(True, 
+        doc = "The dbms isolates uncommited transactions from read operations")
+
     transactional_ddl = attr(True, 
         doc = "DDL statements are transactional (need commit)")
 
@@ -67,16 +70,29 @@ class DatabaseBase(object):
               "PL/pgSQL (PostgreSQL), "
               "SQL:2003 (Anything standards compliant (MySQL))")
 
-    callproc = attr(True,
-        doc = "Database support stored procedures (Optional)",
-        conformance_level = cl.Optional)
-
     lower_func = attr('lower',
         doc = "The name of the function used to convert a string to lowercase")
 
     scrollable_cursors = attr(False,
         doc = "Database supports scrollable cursors",
         conformance_level = cl.Advanced)
+
+    auto_serial = attr(True, 
+        doc = "Serial values are generated automatically when key" \
+              " value is None",
+        conformance_level = cl.Advanced)
+
+    procedures = attr(True, 
+        doc = "Database supports stored procedures",
+        conformance_level = cl.Intermediate)
+
+    procedures.return_results = attr(True, 
+        doc = "Stored procedures can return results",
+        conformance_level = cl.Intermediate)
+ 
+    functions = attr(True, 
+        doc = "Database supports user defined functions", 
+        conformance_level = cl.Intermediate)
 
 
 class sqlite(DatabaseBase):
@@ -88,6 +104,8 @@ class sqlite(DatabaseBase):
     authentication = False
     time_datatype = True
     transactional_ddl = False
+    procedures = False
+    functions = False
 
     typemap = TypeMap()
 
@@ -97,6 +115,8 @@ class postgres(DatabaseBase):
         return "psql -c 'create database %s'" % db_name
 
     stored_procedure_language = "PL/pgSQL"
+    auto_serial = False
+    procedures = False
 
     typemap = TypeMap(clob='text', blob='bytea')
 
@@ -106,8 +126,13 @@ class mysql(DatabaseBase):
     def get_create_db_cmd(self, db_name):
         raise NotImplementedError
 
+    def __init__(self):
+        self.procedures.return_results = False
+
     time_datatype_subsecond = True
     timestamp_datatype_subsecond = False
+    transaction_isolation = False
+    lower_func = False
   
     typemap = TypeMap(clob = 'text')
 
