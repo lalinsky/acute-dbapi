@@ -40,7 +40,8 @@ class Booze(TableBase):
 
 class Barflys(TableBase):
     name = '%sbarflys' % table_prefix
-    ddl = ('create table %s (name %s(20))' % (name, tm.string))
+    ddl = ('create table %s (id %s, name %s(20))' % 
+        (name, tm.serial, tm.string))
 
 class TestTypes(TableBase): 
     name = '%stesttypes' % table_prefix
@@ -480,24 +481,26 @@ class TestCursor(AcuteBase):
         finally:
             con.close()
     
-    @requires('lastrowid')
-    @requires('amiracle')
+    @requires('lastrowid', 'auto_serial')
     def test_lastrowid(self):
         "Insert into identity column sets cursor.lastrowid"
-        con, cur = Booze.create()
+        con, cs = Barflys.create()
         
-        data = dict(name=None, desc='Bass')
-        self._insert(con, cur, table=Booze, data=data )
-        self.failUnlessEqual(self.cs.lastrowid, 1)
-        self.failUnlessEqual(self.cs.rowcount, 1)
+        data = dict(id=None, name='Joe')
+        self._insert(con, cs, table=Barflys, data=data )
+        self.failUnlessEqual(cs.lastrowid, 1)
+        self.failUnlessEqual(cs.rowcount, 1)
         
-    @requires('amiracle')
     def test_insert_None(self):
         "Insert a row with Null columns"
-        self._createTable()
-        self._insert( (None, None) )
-        id_value = self.cs.lastrowid()
-        self.assertEqual(1, id_value)
+        con, cs = Booze.create()
+        self._insert(con, cs, data=dict(name=None))
+        cs.execute("select name from %sbooze" % table_prefix)
+        rows = cs.fetchall()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][0], None)
+        #id_value = self.cs.lastrowid()
+        #self.assertEqual(1, id_value)
 
     @requires('amiracle')
     def test_insert_type_mismatch(self):
@@ -517,62 +520,6 @@ class TestCursor(AcuteBase):
         "Inserting wrong number of columns raises ProgrammingError"
         Booze.create()
         self.assertRaises(driver_module.ProgrammingError, self._insert, (1, ))
-
-    ##@requires('callproc') #, 'amiracle')
-    #def test_callproc_xxx(self):
-    #    """cs.callproc() - IN, OUT, INOUT parameters"""
-    #    con, cs = connect_plus_cursor()
-    #    #TODO: Need to switch between CREATE PROCEDURE & CREATE FUNCTION as needed.
-    #    cs.execute(
-    #         """CREATE FUNCTION CP_TEST_1
-    #         (IN P1 CHAR(5), OUT P2 VARCHAR(5), INOUT P3 INTEGER)
-    #         LANGUAGE SQL
-    #         BEGIN
-    #              SET P2 = 'YYY';
-    #              SET P3 = 3;
-    #         END""")
-    #    params = ( 'XXXXX', None, 1 )
-    #    r = cs.callproc('CP_TEST_1', params)
-    #    self.assertNotEqual( params, r )
-    #    self.assertEqual( ('XXXXX', 'YYY', 3), r )
-    #
-    #@requires('amiracle')
-    #def test_callproc_xxx_resultsets(self):
-    #    """cs.callproc() - w/ Result set"""
-    #    con, cs = connect_plus_cursor()
-    #    cs.execute("CREATE TABLE CP_TEST_TB ( P1 INTEGER )")
-    #
-    #    SIZE = 100;
-    #    for i in range(SIZE):
-    #        cs.execute("INSERT INTO CP_TEST_TB VALUES (%s)" % i)
-    #
-    #    if driver_meta.stored_procedure_language in ['SQL:2003', 'SQL/PL']:
-    #        stmt = """CREATE FUNCTION CP_TEST_1
-    #           (IN P1 INTEGER)
-    #           LANGUAGE SQL
-    #           BEGIN
-    #              DECLARE CS1 CURSOR WITH RETURN FOR
-    #                   SELECT * FROM CP_TEST_TB;
-    #              OPEN CS1;
-    #           END
-    #           """
-    #    elif driver_meta.stored_procedure_language in ['PL/pgSQL']:
-    #        stmt = """CREATE FUNCTION populate() RETURNS integer AS $$
-    #                DECLARE
-    #                -- declarations
-    #                BEGIN
-    #                PERFORM my_function();
-    #                END;
-    #                $$ LANGUAGE plpgsql;
-    #            """
-    #    else:
-    #        raise Unsupported
-    #    cs.execute(stmt)
-    #
-    #    r = callproc("CP_TEST_1", 1)
-    #    self.assertEqual(r, (1, ))
-    #    rows = cs.fetchall()
-    #    self.assertEqual(len(rows), SIZE)
 
     def test_arraysize(self):
         "Cursor must define arraysize"
@@ -603,28 +550,36 @@ class TestCursor(AcuteBase):
     #def test_setoutputsize(self):
     #    # Real test for setoutputsize is driver dependant
     #    raise NotImplementedError,'Driver need to override this test'
-
+   
+    @requires('transaction_isolation')
     def test_cursor_isolation(self):
         "A cursor can read it's own uncommited data"
-        #TODO: What about the converse?
+        #TODO: Split the 2 connection test into it's own unit.
         con = self._connect()
+        con2 = self._connect()
         try:
             cur1 = con.cursor()
             cur2 = con.cursor()
+            cur3 = con2.cursor()
             cur1.execute("insert into %s values ('Victoria Bitter')" % (
                 Booze.name
                 ))
             cur2.execute("select name from %s" % Booze.name)
+            cur3.execute("select name from %s" % Booze.name)
             booze = cur2.fetchall()
             self.assertEqual(len(booze),1)
             self.assertEqual(len(booze[0]),1)
             self.assertEqual(booze[0][0],'Victoria Bitter')
+            #con.rollback()
+            booze2 = cur3.fetchall()
+            self.assertEqual(len(booze2), 0)
         finally:
             con.close()
+            con2.close()
 
     def test_description(self):
         "Cursor description describes columns correctly"
-        con, cur = Booze.create(drop_existing=True)
+        con, cur = Booze.create()
         try:
             self.assertEqual(cur.description,None,
                 "cursor.description should be none after executing a "
@@ -1146,12 +1101,10 @@ class TestTypesEmbedded(AcuteBase):
 
     def test_date_insert_string(self):
         '''Insert dates using strings'''
-        date1 = '2007-05-01'
-        #date1 = "'05/01/2007'"
-        data = dict(date1 = datetime.date(2007, 05, 01))
+        data = dict(date1 = '2007-05-01')
         self._insert(self.con, self.cs, table=TestTypes, data=data)
         #TODO: Weakened this test to str() for psycopg2
-        self.assertEqual(str(self._get_row(TestTypes)[2]), date1)
+        self.assertEqual(str(self._get_row(TestTypes)[2]), data['date1'])
 
     def test_date_insert(self):
         '''Insert dates using datetime dates'''
@@ -1179,8 +1132,12 @@ class TestTypesEmbedded(AcuteBase):
         timestamp1_string = '2007-05-01 11:03:13'
         self._insert(self.con, self.cs, table=TestTypes, 
             data=dict(timestamp1=timestamp1))
-        self.assertEqual(str(self._get_row(TestTypes)[3]),
-            timestamp1_string)
+        if dbms_meta.__class__.__name__ != 'informix':
+            self.assertEqual(str(self._get_row(TestTypes)[3]),
+                timestamp1_string)
+        else:
+            self.assertEqual(self._get_row(self.table)[3].isoformat(' '),
+                timestamp1_string)
         #self.assertEqual(self._get_lastrow()[3],timestamp1)
 
     @requires('time_datatype')
@@ -1249,16 +1206,16 @@ class TestTypesEmbedded(AcuteBase):
 class TestSQLProcs(AcuteBase):
 
     @requires('callproc', 'lower_func')
-    @requires('amiracle')
     def test_callproc(self):
         '''Call a stored procedure (experimental)'''
         con = self._connect()
         try:
             cur = con.cursor()
             r = cur.callproc(driver_meta.lower_func,('FOO',))
-            self.assertNotEqual(r, None)
-            self.assertEqual(len(r),1)
-            self.assertEqual(r[0],'FOO')
+            #r = cur.callproc('lower', 'FOO')
+            #self.assertNotEqual(r, None)
+            #self.assertEqual(len(r),1)
+            #self.assertEqual(r[0],'FOO')
             r = cur.fetchall()
             self.assertNotEqual(r, None, 'callproc produced no result set')
             self.assertEqual(len(r),1,'callproc produced no result set')
@@ -1270,6 +1227,85 @@ class TestSQLProcs(AcuteBase):
                 )
         finally:
             con.close()
+
+    @requires('callproc', 'procedures', 'procedures.return_values')
+    #TODO: IMMED: Add predicate handling to requires decorator
+    #@requires('sql_procedure_language==SQL2003')
+    def test_callproc_xxx(self):
+        """cs.callproc() - IN, OUT, INOUT parameters"""
+        con, cs = connect_plus_cursor()
+        assert hasattr(cs, 'callproc')
+        try:
+            cs.execute("drop function cp_test_1")
+        except (driver_module.InterfaceError,
+               driver_module.OperationalError):
+            pass
+        if dbms_meta.__class__.__name__ == 'mysql':
+            cs.execute("""DROP PROCEDURE IF EXISTS CP_TEST_1""")
+            cs.execute("""
+                CREATE procedure CP_TEST_1
+                (IN P1 text, OUT P2 text, INOUT P3 INTEGER)
+                BEGIN
+                    set P2 = 'YYY';
+                    set P3 = 3;
+                END
+            """)
+        else:
+            cs.execute(
+                """CREATE PROCEDURE CP_TEST_1
+                (IN P1 CHAR(5), OUT P2 VARCHAR(5), INOUT P3 INTEGER)
+                LANGUAGE SQL
+                BEGIN
+                  SET P2 = 'YYY';
+                  SET P3 = 3;
+                END
+            """)
+        p2 = None
+        p3 = 1
+        params = ( 'XXXXX', p2, p3 )
+        r = cs.callproc('CP_TEST_1', params)
+        #self.assertNotEqual( params, r )
+        self.assertEqual('YYY', p2)
+        self.assertEqual(3, p3)
+        self.assertEqual( ('XXXXX', 'YYY', 3), r )
+
+    #@requires('amiracle')
+    #def test_callproc_xxx_resultsets(self):
+    #    """cs.callproc() - w/ Result set"""
+    #    con, cs = connect_plus_cursor()
+    #    cs.execute("CREATE TABLE CP_TEST_TB ( P1 INTEGER )")
+    #    SIZE = 100;
+    #    for i in range(SIZE):
+    #        cs.execute("INSERT INTO CP_TEST_TB VALUES (%s)" % i)
+    #
+    #    if driver_meta.stored_procedure_language in ['SQL:2003', 'SQL/PL']:
+    #        stmt = """CREATE FUNCTION CP_TEST_1
+    #           (IN P1 INTEGER)
+    #           LANGUAGE SQL
+    #           BEGIN
+    #              DECLARE CS1 CURSOR WITH RETURN FOR
+    #                   SELECT * FROM CP_TEST_TB;
+    #              OPEN CS1;
+    #           END
+    #           """
+    #    elif driver_meta.stored_procedure_language in ['PL/pgSQL']:
+    #        stmt = """CREATE FUNCTION populate() RETURNS integer AS $$
+    #                DECLARE
+    #                -- declarations
+    #                BEGIN
+    #                PERFORM my_function();
+    #                END;
+    #                $$ LANGUAGE plpgsql;
+    #            """
+    #    else:
+    #        raise Unsupported
+    #    cs.execute(stmt)
+    #
+    #    r = callproc("CP_TEST_1", 1)
+    #    self.assertEqual(r, (1, ))
+    #    rows = cs.fetchall()
+    #    self.assertEqual(len(rows), SIZE)
+
 
     def help_nextset_setUp(self,cur):
         ''' Create a procedure called deleteme that returns two result sets,
