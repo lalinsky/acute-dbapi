@@ -47,11 +47,11 @@ Fetchall retrieves rows & sets rowcount ... ok
 Fetchall returns accurate data ... ok
 Fetchmany retrieves rows & sets rowcount ... ok
 Fetchone retrieves row & sets rowcount ... ok
-Insert a row with Null columns ... (Skipped) ok
+Insert a row with Null columns ... ok
 Inserting wrong number of columns raises ProgrammingError ... (Skipped) ok
 Insert that overflows column size raises ProgrammingError ... (Skipped) ok
 Insert using the wrong datatype raises TypeError ... ok
-Insert into identity column sets cursor.lastrowid ... (Skipped) ok
+Insert into identity column sets cursor.lastrowid ... (Unsupported) ok
 Can mix fetchone, fetchmany, and fetchall ... ok
 Rowcount matches the number of rows inserted ... (Unsupported) ok
 Rowcount should be 1 after singleton insert ... ok
@@ -70,10 +70,11 @@ Insert time with subsecond precision using datetime's time ... ok
 Insert time with subsecond precision using string ... ok
 Insert timestamp using datetime's datetime ... ok
 Insert timestamp with subsecond precision using strings ... ok
-Call a stored procedure (experimental) ... (Skipped) ok
+Call a stored procedure (experimental) ... ok
+cs.callproc() - IN, OUT, INOUT parameters ... (Unsupported) ok
 Stored procedure calls return result sets ... (Unsupported) ok
 
 ----------------------------------------------------------------------
-Ran 74 tests in 5.870s
+Ran 75 tests in 7.787s
 
 OK
