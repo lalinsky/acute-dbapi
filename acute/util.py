@@ -78,7 +78,7 @@ driver_module = import_module(config.driver_name)
 
 def connect(connection_info=None, connection_method='default'):
     if connection_info == None:
-        connection_info = config.ConnectionInfo
+        connection_info = config.ConnectionInfo()
 
     args, kwargs = driver_meta.convert_connect_args(connection_info)
 

@@ -5,7 +5,9 @@
 # NOTES: 
 # When subclassing DriverBase, be sure to match the name of the driver 
 #    that will be imported, including case.
+import config
 import databases
+import warnings
 from util import attr
 
 class ConformanceLevels(object):
@@ -14,8 +16,43 @@ class ConformanceLevels(object):
     Intermediate = 2
     Advanced = 3
 cl = ConformanceLevels()
+
+
+dbms_type = getattr(config, 'dbms', None)
+overridden = False
+if config.driver_name == 'MySQLdb' and dbms_type != 'mysql':
+    dbms_type = 'mysql'
+    overridden = True
+elif config.driver_name == 'pysqlite2' and dbms_type != 'sqlite':
+    dbms_type = 'sqlite'
+    overridden = True
+elif config.driver_name == 'psycopg2' and dbms_type != 'postgres':
+    dbms_type = 'postgres'
+    overridden = True
+elif config.driver_name == 'cx_Oracle' and dbms_type != 'oracle':
+    dbms_type = 'oracle'
+    overridden = True
+
+if overridden: 
+   warnings.warn('dbms set to %s based off driver being used')
+
+if dbms_type == 'mysql':
+    dbms = databases.mysql
+elif dbms_type == 'sqlite':
+    dbms = databases.sqlite
+elif dbms_type == 'postgres':
+    dbms = databases.postgres
+elif dbms_type == 'informix':
+    dbms = databases.informix
+elif dbms_type == 'db2':
+    dbms = databases.db2
+elif dbms_type == 'oracle':
+    dbms = databases.oracle
+else:
+    raise Exception("Can't determine database class to use for config.dbms: %s"
+        % dbms_type)
     
-    
+
 class DriverBase(object):
     """Describes the features that are known to vary between drivers.
     Drivers should subclass & set attributes as appropriate.
@@ -155,9 +192,9 @@ class MySQLdb(DriverBase):
     sane_empty_fetch = False
     setoutputsize = False
     rowcount_reset_empty_fetch = False
-  
 
 class ibm_db(DriverBase):
+
     def convert_connect_args(self, ci):
         if ci.port:
             args =[
@@ -167,8 +204,6 @@ class ibm_db(DriverBase):
         else:
             args = ["DATABASE=%s;UID=%s;PWD=%s;"
                     % (ci.database, ci.name, ci.password)]
-
-    dbms = databases.db2
 
 class ceODBC(DriverBase):
     connection_level_exceptions = False
@@ -181,6 +216,4 @@ class cx_Oracle(DriverBase):
 
     def convert_connect_args(self, ci):
         return [ci.username, ci.password, ci.database], {}
-
-    dbms = databases.oracle
 

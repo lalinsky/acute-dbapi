@@ -67,7 +67,7 @@ def setup_module():
     except:
         try:
             create_db_cmd = dbms_meta.get_create_db_cmd(
-                config.ConnectionInfo)
+                config.ConnectionInfo.database)
         except NotImplementedError:
             create_db_cmd = ''
 
