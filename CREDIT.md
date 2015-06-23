@@ -1,0 +1,12 @@
+Stuart Bishop, for creating the original DB-API 2.0 test suite
+  * http://stuartbishop.net/Software/DBAPI20TestSuite/
+
+Marc-André Lemburg, for PEP 249.
+  * http://www.python.org/dev/peps/pep-0249/
+
+Manas Dadarkar and Swetha Patel at IBM, for encouraging me to write this testsuite.
+
+The DB-SIG and all of the DB-API driver authors for sharing their work with the world.
+  * http://www.python.org/topics/database/
+  * http://mail.python.org/pipermail/db-sig/
+  * http://www.python.org/topics/database/modules.html

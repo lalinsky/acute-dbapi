@@ -1,0 +1,57 @@
+## Introduction ##
+acute-dbapi is a testsuite for Python database drivers to check their compliance against the DB-API 2.0 standard (PEP 249).  It is also intended to test common implementation features that haven't yet found their way into DB-API specification.  Acute was was originally derived from Stuart Bishop's DBAPI20TestSuite `[1]`, and it's name stands for "Anal Compliance Unit Test Environment," which is a tip-of-the-hat to Stuart, who described his testsuite in those terms `[2]`.
+
+Acute-dbapi is very much a work in progress.   Feel free to contribute patches for anything you see that's out of place!
+
+
+## Usage ##
+To use, first checkout the current trunk:
+svn co http://acute-dbapi.googlecode.com/svn/trunk acute-dbabpi
+
+Then cd to acute-dbapi/acute and update config.py to match your database driver, the database name to use & your credentials for that database.
+
+You're then ready to run the testsuite with:
+python test-dbapi.py
+
+## Adding Support for Drivers ##
+acute-dbapi currently supports pysqlite2, MySQLdb, and psycopg2.  There are reports on driver functionality at the project's "wiki" as DriverFeatures `[3]` and TestResults `[4]`.
+
+There is a list of driver-supported features in "features.py".   A set of class attributes on the `SupportedFeatures` class define the default, expected, behavior for each feature.   These are overridden for each driver in the initialization method of the class to specify any quirks of the driver's implementation.
+
+## Architecture ##
+The testsuite is designed such that all tests are expected to pass when the driver's features are setup correctly in "features.py".  There are two mechanisms to support this:  first, if a feature under test isn't supported by a driver, then that test will still be run but will be converted to an 'Unsupported' status upon failure; if the test succeeds despite the fact that the driver is declared to not support the feature, then the second mechanism kicks in and the testsuite raises an `UnexpectedSuccess` error.  The only tests that will be skipped are those that are under active development (these are the tests that are declared with @require('amiracle')).   This setup makes it simpler to track which tests are truly in error versus the known failings of the driver.
+
+Tests that are under active development will be skipped.  These tests are declared with a @require('amiracle') decorator.
+
+
+## Philosophy ##
+  * Extensive unit tests improve code quality, allow developers to be more courageous in making aggressive changes, and improve user's ability to provide bug feedback.
+  * Sharing applicable tests between projects strengthens standards and saves time when developing new compliant modules.
+  * The "least common denominator" approach of the DB-API 2.0 standard was necessary in Python's infancy, but technologies have matured to the point where further possibilities for standardization exist.  Features that haven't reached ubiquity should be made optional, not simply ignored or too lightly left as an "implementation extension."  The same process has occurred with SQL -- SQL 89 was very light, SQL 92 introduced conformance levels, and SQL 1999 greatly expanded on them. `[5]`
+
+
+## Finally ##
+
+The project's homepage is at: http://code.google.com/p/acute-dbapi/.
+
+acute-dbapi is licensed under the MIT license (see LICENSE).
+
+enjoy!
+
+
+
+#### Footnotes ####
+  * Stuart Bishop's DB-API test suite is available at http://stuartbishop.net/Software/DBAPI20TestSuite/.
+
+  * The initial thread on Stuart Bishop's tests is at http://mail.python.org/pipermail/db-sig/2003-February/003116.html.  There were several separate threads on the topic, so be sure to review all of February, March, and April 2003's archives as well (http://mail.python.org/pipermail/db-sig/2003-February).     Here's a bit of humor taken from one of the earlier threads:
+
+> "Now we have booze and barflies entering the discussion,  plus rumours of
+> DBAs on drugs... and I won't tell you what flashes through my mind each
+> time I read the subject line with 'Anal Compliance' in it.  All around
+> this is turning out to be a thoroughly unwholesome unit test." -- Ian Bicking
+
+  * http://code.google.com/p/acute-dbapi/wiki/DriverFeatures
+
+  * http://code.google.com/p/acute-dbapi/wiki/TestResults
+
+  * http://www.postgresql.org/docs/8.2/static/features.html
